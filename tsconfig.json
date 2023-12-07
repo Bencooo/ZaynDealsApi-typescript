@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "module": "NodeNext",
+      "moduleResolution": "node",
+      "baseUrl": "src",
+      "outDir": "dist",
+      "sourceMap": true,
+      "noImplicitAny": true,
+      "resolveJsonModule": true,
+      "esModuleInterop": true,
+      "typeRoots": ["./node_modules/@types", "./src/types"],
+    },
+    "include": ["src/**/*"],
+  }

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "zayn-deals",
+  "private_key_id": "2d4c6d8c191e17074f7e734eca5c954d86a3f505",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDudXd+wzyt4Hq1\n736fD3eiyZU03zUxHQUshzzez6+WQtf1KcRbj2K9w3T7YwF5FzG+qkKEpwTbACEE\nicOxBg0old8O/NVNpGB7QgdiUZO0BdosgZQ6PMkidG1xZIQ/sgt/7UOzgMwtH5s0\nIISymTCR9xae/iZUnZik5XJxbWGvK4ehgqOh9/eUCspLG8iXbLTRKh9Dn45mjgSw\nQ39RUvtclIc2Pi7QYg5T8qiuHa5u1ZiluQFrI78cQJENmA2/PEtmQ8CqJ6J5KgBk\nWkE5Z8hu9e+1nNyOx9pHk1TOh2P9nEHk3/0bT35ksh5j2jDJsqVUpJN4jYk+QfDk\n4FCqlJIhAgMBAAECggEACyy3qNnlYhCYlfLfPPz9XxErTAsAJyKnap370EU5thHA\npRCMAlTTcvXrgxkkqVQMIYjapsGQJkmSdbzImucgGFYA2gCNmzhBltHruEPMAPro\nbbJOclw4el2sABn0+9DDXf9a1aXXhTw4V1aex7ykdgxD1x354qujMTcMO4LwucPg\nfdLYcD/9bnJj6qeqY0wciEgvWnwtE1PA78E+8ml6RIl9Q4utF8DFgIniY2q13EWK\nfFHjxG5akcEEFVuDDvfgb3RGMRdZiil0NkGo5lEetpqcSekpTIxr4SFE0u75uhOl\n4B8tGuvOlIw5PIvhNlUa/dHyAlKHLqs8GhnSxoa78QKBgQD9m3HTxeQ/bxXq7U6o\nOwVjLfi1zCJxu4o3uhhI/HLV195jeJNVOjsUnpyxtEzycA6Uo1fkrc07zc6NZH9v\ngOGZbF/T+qzrHlpZv7NtcLJRW9m36AKGLamvGLOAE8L0K6w+T1D4xIAWnQlO0Mwv\nrt1yqxUmGbafg8VwaSvrAAcsqwKBgQDwtW7qJFOpmqswkS7MW9yhW9kWBcPVbJie\nDpfhzgFMbWRvV0u0jsuDgHCYLRILgDG/PH8c4Sum1wyAXKSvxlhYJE8U+2/1+nhM\nCzBmbJVN4w3XAEuVL8L510oHdZDm1H2FgP++er5XrfPQpNU+M/rDlvGqw575GXFm\nw+V4YBLkYwKBgQDBr2orlsNPPwO6PCsKiKkAqid8kL7tpZFWJiZN95+segU6auf6\n+1IL2WdKwKzTq4k3M9j4qVRJDFFn4w0Al6m0hvRY7OYLW08dpC7gsmU9haytq9/h\nohYpx++vLWiDGqednu30T/6TRrPJIeYPtLkjzk2En7a99OFhjLEh9Q+FqQKBgE/I\nMx0UMU6z3y3X0SUXBYfOA6QTARfKSMOKnrjPKQsF7xYgXw1XjwjlF2y485QwR0zV\nZmRSFb/U42XgTw2btkhwsG2J8VAcVqcNxlsMfmg0a6/pfyPRktRwkS7rvr1jjL8l\nRJ8D2/b/xyJOoAdf/yu46hzpfdWeo0GmiHZfkaN1AoGAF0TW7GG8sKylRP06q6Gk\n2roaTP7ttyBRYfD7juJHXuJZhgHG00bgO+b+xyAN44P8DTKolHLqwWyl1JR2psgZ\n0b9qRdISHJ1igNHnY1AsEHW6/Xg5iqDruzehJH0+kcmpVhJ+g7wPO8iZ7jOpDIL5\nSwI/cTDMEpgKGXqS+QFhZr0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-t09ew@zayn-deals.iam.gserviceaccount.com",
+  "client_id": "110059956971679894580",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t09ew%40zayn-deals.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
