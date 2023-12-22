@@ -6,7 +6,8 @@ export interface Coupon {
     description: string;
     price: string;
     rules: string;
-    dealType: string;
-    validityDate: Date;
+    dealType: string; // TODO use as an enum
+    validityDate: Date; // TODO remove
     reusable: boolean;
+    // TODO start and end validityDate (beta)
 }

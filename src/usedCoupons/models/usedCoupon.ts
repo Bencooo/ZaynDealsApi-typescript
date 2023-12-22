@@ -3,5 +3,5 @@ export interface UsedCoupon {
     userId: string;
     couponId: string;
     usageDate: Date;
-    //merchantPinCode: string;
+    // TODO user subscription ID
 }

@@ -1,4 +1,5 @@
 import express from 'express';
+import * as functions from 'firebase-functions';
 import http from 'http';
 import userRoutes from './users/routes/userRoutes';
 import merchantRoutes from './merchants/routes/merchantRoutes';
@@ -19,11 +20,16 @@ app.use('/usedCoupons', usedCouponRoutes);
 app.use('/subscriptions', subscriptionRoutes);
 app.use('/userSubscriptions', userSubscriptionRoutes);
   
-  const server = http.createServer(app);
+  //const server = http.createServer(app);
 
-  server.listen(8080, () => {
+  /*server.listen(8080, () => {
     console.log('Server running on http://localhost:8080/');
-  });
+  });*/
+
+
+exports.api = functions.https.onRequest(app);
+
+  
 
 
 

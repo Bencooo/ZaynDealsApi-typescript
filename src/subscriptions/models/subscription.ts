@@ -1,8 +1,8 @@
 export interface Subscription {
     id: string;
-    subId: string;
+    // subId: string;
     title: string;
     price: number;
     description: string;
-    duration: number; // ou string, selon comment vous stockez la durée
+    duration: number; // or string
 }

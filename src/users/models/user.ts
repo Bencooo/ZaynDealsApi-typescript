@@ -4,5 +4,6 @@ export interface User {
     firstName: string;
     lastName: string;
     dateOfCreation?: Date;
+    // TODO Role (customer, merchant, admin) default value = customer
 }
 

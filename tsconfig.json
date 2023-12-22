@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
-      "module": "NodeNext",
+      "module": "CommonJS",
       "moduleResolution": "node",
+      "target": "ES2015",
       "baseUrl": "src",
       "outDir": "dist",
       "sourceMap": true,

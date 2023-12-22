@@ -71,3 +71,4 @@ export const updateCoupon = async (req: Request, res: Response): Promise<void> =
         res.status(500).send({ message: "Error updating coupon", error: error.message });
     }
 };
+
