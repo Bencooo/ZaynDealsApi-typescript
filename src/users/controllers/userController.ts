@@ -4,7 +4,7 @@ import { db } from '../../utils/firebase';
 import { User } from '../models/user';
 
 export const createUser = async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, role = 'customer' } = req.body; // Ajout de role avec une valeur par défaut
     const currentDate = new Date();
 
     try {
@@ -19,7 +19,8 @@ export const createUser = async (req: Request, res: Response) => {
             email,
             firstName,
             lastName,
-            dateOfCreation: currentDate
+            dateOfCreation: currentDate,
+            role // Ajout du rôle à userData
         };
 
         await db.collection('users').doc(userRecord.uid).set(userData);
@@ -30,6 +31,7 @@ export const createUser = async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error creating user", error: error.message });
     }
 };
+
 
 export const getUserInfo = async (req: Request, res: Response) => {
     //const userId = req.user?.uid;
@@ -43,3 +45,20 @@ export const getUserInfo = async (req: Request, res: Response) => {
 
     res.status(200).send(doc.data());
 };
+
+
+export const updateUser = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.uid; // ou récupérer l'ID de l'utilisateur d'une autre manière
+    const userRef = db.collection('users').doc(userId);
+
+    try {
+        const userData = req.body; // Les données à mettre à jour
+        await userRef.update(userData);
+
+        res.status(200).send({ message: "User updated successfully" });
+    } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).send({ message: "Error updating user", error: error.message });
+    }
+};
+

@@ -3,7 +3,8 @@ export interface User {
     email: string;
     firstName: string;
     lastName: string;
-    dateOfCreation?: Date;
-    // TODO Role (customer, merchant, admin) default value = customer
+    dateOfCreation: Date;
+    role: string;
 }
 
+// TODO Role (customer, merchant, admin) default value = customer

@@ -16,7 +16,7 @@ exports.getUserInfo = exports.createUser = void 0;
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const firebase_1 = require("../../utils/firebase");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, role = 'customer' } = req.body; // Ajout de role avec une valeur par défaut
     const currentDate = new Date();
     try {
         const userRecord = yield firebase_admin_1.default.auth().createUser({
@@ -29,7 +29,8 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             email,
             firstName,
             lastName,
-            dateOfCreation: currentDate
+            dateOfCreation: currentDate,
+            role // Ajout du rôle à userData
         };
         yield firebase_1.db.collection('users').doc(userRecord.uid).set(userData);
         res.status(201).send({ message: "User created successfully", userId: userRecord.uid });
