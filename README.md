@@ -78,7 +78,7 @@ Internal server error.
 ```
 #### Example Request
 
-```json
+```bash
 curl -X POST 'https://us-central1-zayn-deals.cloudfunctions.net/api/users/create' \
 -H 'Content-Type: application/json' \
 -d '{
