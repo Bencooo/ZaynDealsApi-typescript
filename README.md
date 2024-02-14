@@ -1,7 +1,3 @@
-# ZaynDealsApi-typescript
-TypeScript Api with firebase
-
-
 # ZaynDeals API Documentation
 
 ## Overview
