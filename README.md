@@ -78,6 +78,7 @@ Internal server error.
 ```
 #### Example Request
 
+```json
 curl -X POST 'https://us-central1-zayn-deals.cloudfunctions.net/api/users/create' \
 -H 'Content-Type: application/json' \
 -d '{
@@ -88,6 +89,7 @@ curl -X POST 'https://us-central1-zayn-deals.cloudfunctions.net/api/users/create
   "phoneNumber": "0123456789",
   "role": "customer"
 }'
+```
 
 #### Additional Notes
 
