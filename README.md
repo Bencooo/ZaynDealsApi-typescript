@@ -93,3 +93,81 @@ The phoneNumber field is optional and will only be included in the database if p
 The user's role is set to 'customer' by default but can be customized via the role field.
 Ensure that the password is strong enough to meet Firebase Authentication's security policies.
 If the error auth/email-already-exists occurs, it indicates that the provided email is already in use by another account.
+
+
+### Get Merchant by Category
+
+#### Description
+
+This endpoint retrieves merchants based on category and subCategory criteria. It supports pagination through the `lastDocId` parameter and limits the number of results returned with the `limit` parameter.
+
+#### URL
+
+`GET https://us-central1-zayn-deals.cloudfunctions.net/api/merchants/getByCategory`
+
+#### HTTP Method
+
+`GET`
+
+#### Query Parameters
+
+| Field         | Type    | Description                                             | Required |
+|---------------|---------|---------------------------------------------------------|----------|
+| `category`    | String  | The category to filter merchants by.                    | No       |
+| `subCategory` | String  | The subCategory to further filter merchants within a category. | No       |
+| `lastDocId`   | String  | The document ID of the last merchant received, for pagination. | No       |
+| `limit`       | Integer | The maximum number of merchants to return. Defaults to 25 if not specified. | No       |
+
+#### Responses
+
+##### 200 OK
+
+Returns a list of merchants matching the criteria.
+
+```json
+[
+  {
+    "id": "merchantId",
+    "name": "Merchant Name",
+    "category": "Merchant Category",
+    "subCategory": "Merchant SubCategory",
+    "tags": ["tag1", "tag2"],
+    "address": "Merchant Address",
+    "imageUrls": ["url1", "url2"]
+  }
+]
+```
+##### 404 Not Found
+
+No merchants found matching the criteria.
+
+```json
+{
+  "message": "No merchants found matching the criteria"
+}
+```
+##### 500 Internal Server Error
+
+Internal server error.
+
+```json
+{
+  "message": "Error getting merchants",
+  "error": "[Error Description]"
+}
+```
+#### Example Request
+
+```bash
+curl -G 'https://us-central1-zayn-deals.cloudfunctions.net/api/merchants/getByCategory' \
+--data-urlencode "category=Food" \
+--data-urlencode "subCategory=Italian" \
+--data-urlencode "limit=10"
+```
+
+#### Additional Notes
+
+The category and subCategory parameters are used to filter merchants. They are optional, and when not provided, all merchants are returned.
+Pagination is supported through the lastDocId parameter, which should be the ID of the last merchant received by the client. This is useful for fetching the next set of results.
+The limit parameter controls the maximum number of merchants returned by the request. It defaults to 25 if not specified.
+

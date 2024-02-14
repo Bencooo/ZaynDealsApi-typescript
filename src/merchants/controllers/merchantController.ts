@@ -201,7 +201,7 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
         res.status(200).send(merchants);
     } catch (error) {
         console.error("Error getting merchants by category and subCategory:", error);
-        res.status(500).send({ message: 'Error getting merchants', error: error.message });
+        res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 };
 
