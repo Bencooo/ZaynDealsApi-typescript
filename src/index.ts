@@ -20,11 +20,11 @@ app.use('/usedCoupons', usedCouponRoutes);
 app.use('/subscriptions', subscriptionRoutes);
 app.use('/userSubscriptions', userSubscriptionRoutes);
   
-  //const server = http.createServer(app);
+  const server = http.createServer(app);
 
-  /*server.listen(8080, () => {
-    console.log('Server running on http://localhost:8080/');
-  });*/
+  server.listen(4000, () => {
+    console.log('Server running on http://localhost:4000/');
+  });
 
 
 exports.api = functions.https.onRequest(app);

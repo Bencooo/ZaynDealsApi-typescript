@@ -4,14 +4,19 @@ import { db } from '../../utils/firebase';
 import { User } from '../models/user';
 
 export const createUser = async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName, role = 'customer' } = req.body; // Ajout de role avec une valeur par défaut
+    const { email, password, firstName, lastName, phoneNumber, role = 'customer' } = req.body;
     const currentDate = new Date();
+
+    if (!email || !password || !firstName || !lastName) {
+        return res.status(400).send({ message: "Unprocessable entity." });
+    }
 
     try {
         const userRecord = await admin.auth().createUser({
             email,
             password,
-            displayName: `${firstName} ${lastName}`
+            displayName: `${firstName} ${lastName}`,
+            //...(phoneNumber ? { phoneNumber } : {}), // Inclut phoneNumber seulement s'il est fourni
         });
 
         const userData: User = {
@@ -19,18 +24,27 @@ export const createUser = async (req: Request, res: Response) => {
             email,
             firstName,
             lastName,
+            role,
             dateOfCreation: currentDate,
-            role // Ajout du rôle à userData
+            ...(phoneNumber && { phoneNumber }),
         };
+
 
         await db.collection('users').doc(userRecord.uid).set(userData);
 
-        res.status(201).send({ message: "User created successfully", userId: userRecord.uid });
+        res.status(201).send({ message: "OK" });
     } catch (error) {
         console.error("Error creating user:", error);
-        res.status(500).send({ message: "Error creating user", error: error.message });
+
+        if (error.code === 'auth/email-already-exists') {
+            return res.status(409).send({ message: "Conflict." });
+        } else {
+            return res.status(500).send({ message: "Internal Server Error", error: error.message });
+        }
     }
 };
+
+
 
 
 export const getUserInfo = async (req: Request, res: Response) => {

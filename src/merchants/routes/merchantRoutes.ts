@@ -8,4 +8,6 @@ router.delete('/:merchantId', MerchantController.deleteMerchant);
 router.get('/foods', MerchantController.getAllFoodMerchants);
 router.put('/:merchantId', MerchantController.updateMerchant);
 
+router.get('/category', MerchantController.getMerchantCategory);
+
 export default router;
