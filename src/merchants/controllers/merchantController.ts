@@ -13,7 +13,7 @@ export const createMerchant = async (req: Request, res: Response) => {
             category,
             subCategory,
             tags,
-            address,
+            //address,
             phoneNumber,
             email,
             imageUrls,

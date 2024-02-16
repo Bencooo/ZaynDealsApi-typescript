@@ -5,7 +5,7 @@ export interface Merchant {
     category: string;//
     subCategory: string[];//
     tags: string[];//
-    address: string;//
+    address: Address;//
     phoneNumber: string;
     email: string;
     imageUrls: string[];//
@@ -22,6 +22,6 @@ export interface Address {
     id: string;
     street: string;
     area: string;
-    city: string;
+    //city: string;
     postalcode: string;
 }
