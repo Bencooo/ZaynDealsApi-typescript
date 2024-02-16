@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchant = void 0;
+exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
 const firebase_1 = require("../../utils/firebase");
 const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
@@ -20,7 +20,7 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
             category,
             subCategory,
             tags,
-            address,
+            //address,
             phoneNumber,
             email,
             imageUrls,
@@ -38,6 +38,36 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.createMerchant = createMerchant;
+const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+    try {
+        const merchantData = {
+            name,
+            description,
+            category,
+            subCategory,
+            tags,
+            phoneNumber,
+            email,
+            imageUrls,
+            menuUrls,
+            pinCode,
+            openingHours,
+            instagram,
+            createdAt: new Date() // Date de création
+        };
+        const merchantRef = yield firebase_1.db.collection('merchants').add(merchantData);
+        if (address) {
+            const addressData = Object.assign(Object.assign({}, address), { merchantId: merchantRef.id, createdAt: new Date() });
+            yield firebase_1.db.collection('addresses').add(addressData);
+        }
+        res.status(201).send({ message: "Merchant and address created successfully", merchantId: merchantRef.id });
+    }
+    catch (error) {
+        res.status(500).send({ message: "Error creating merchant and address", error: error.message });
+    }
+});
+exports.createMerchantAndAddress = createMerchantAndAddress;
 const deleteMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const merchantId = req.params.merchantId;
     try {

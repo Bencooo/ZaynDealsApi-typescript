@@ -27,9 +27,10 @@ const express_1 = require("express");
 const MerchantController = __importStar(require("../controllers/merchantController"));
 const router = (0, express_1.Router)();
 router.post('/create', MerchantController.createMerchant);
+router.post('/createAddress', MerchantController.createMerchantAndAddress);
 router.delete('/:merchantId', MerchantController.deleteMerchant);
 router.get('/foods', MerchantController.getAllFoodMerchants);
 router.put('/:merchantId', MerchantController.updateMerchant);
-router.get('/category', MerchantController.getMerchantCategory);
+router.get('', MerchantController.getMerchantCategory);
 exports.default = router;
 //# sourceMappingURL=merchantRoutes.js.map
