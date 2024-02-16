@@ -12,32 +12,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserInfo = exports.createUser = void 0;
+exports.updateUser = exports.getUserInfo = exports.createUser = void 0;
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const firebase_1 = require("../../utils/firebase");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password, firstName, lastName, role = 'customer' } = req.body; // Ajout de role avec une valeur par défaut
+    const { email, password, firstName, lastName, phoneNumber, role = 'customer' } = req.body;
     const currentDate = new Date();
+    if (!email || !password || !firstName || !lastName) {
+        return res.status(400).send({ message: "Unprocessable entity." });
+    }
     try {
         const userRecord = yield firebase_admin_1.default.auth().createUser({
             email,
             password,
-            displayName: `${firstName} ${lastName}`
+            displayName: `${firstName} ${lastName}`,
+            //...(phoneNumber ? { phoneNumber } : {}), // Inclut phoneNumber seulement s'il est fourni
         });
-        const userData = {
-            id: userRecord.uid,
-            email,
+        const userData = Object.assign({ id: userRecord.uid, email,
             firstName,
             lastName,
-            dateOfCreation: currentDate,
-            role // Ajout du rôle à userData
-        };
+            role, dateOfCreation: currentDate }, (phoneNumber && { phoneNumber }));
         yield firebase_1.db.collection('users').doc(userRecord.uid).set(userData);
-        res.status(201).send({ message: "User created successfully", userId: userRecord.uid });
+        res.status(201).send({ message: "OK" });
     }
     catch (error) {
         console.error("Error creating user:", error);
-        res.status(500).send({ message: "Error creating user", error: error.message });
+        if (error.code === 'auth/email-already-exists') {
+            return res.status(409).send({ message: "Conflict." });
+        }
+        else {
+            return res.status(500).send({ message: "Internal Server Error", error: error.message });
+        }
     }
 });
 exports.createUser = createUser;
@@ -53,4 +58,19 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     res.status(200).send(doc.data());
 });
 exports.getUserInfo = getUserInfo;
+const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b.uid; // ou récupérer l'ID de l'utilisateur d'une autre manière
+    const userRef = firebase_1.db.collection('users').doc(userId);
+    try {
+        const userData = req.body; // Les données à mettre à jour
+        yield userRef.update(userData);
+        res.status(200).send({ message: "User updated successfully" });
+    }
+    catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).send({ message: "Error updating user", error: error.message });
+    }
+});
+exports.updateUser = updateUser;
 //# sourceMappingURL=userController.js.map

@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const functions = __importStar(require("firebase-functions"));
+const http_1 = __importDefault(require("http"));
 const userRoutes_1 = __importDefault(require("./users/routes/userRoutes"));
 const merchantRoutes_1 = __importDefault(require("./merchants/routes/merchantRoutes"));
 const couponRoutes_1 = __importDefault(require("./coupons/routes/couponRoutes"));
@@ -42,9 +43,9 @@ app.use('/coupons', couponRoutes_1.default);
 app.use('/usedCoupons', usedCouponRoutes_1.default);
 app.use('/subscriptions', subscriptionRoutes_1.default);
 app.use('/userSubscriptions', userSubscriptionRoutes_1.default);
-//const server = http.createServer(app);
-/*server.listen(8080, () => {
-  console.log('Server running on http://localhost:8080/');
-});*/
+const server = http_1.default.createServer(app);
+server.listen(4000, () => {
+    console.log('Server running on http://localhost:4000/');
+});
 exports.api = functions.https.onRequest(app);
 //# sourceMappingURL=index.js.map

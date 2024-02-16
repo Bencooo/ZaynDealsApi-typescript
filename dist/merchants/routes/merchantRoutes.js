@@ -30,5 +30,6 @@ router.post('/create', MerchantController.createMerchant);
 router.delete('/:merchantId', MerchantController.deleteMerchant);
 router.get('/foods', MerchantController.getAllFoodMerchants);
 router.put('/:merchantId', MerchantController.updateMerchant);
+router.get('/category', MerchantController.getMerchantCategory);
 exports.default = router;
 //# sourceMappingURL=merchantRoutes.js.map

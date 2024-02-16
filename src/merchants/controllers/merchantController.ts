@@ -31,6 +31,51 @@ export const createMerchant = async (req: Request, res: Response) => {
     }
 };
 
+
+
+
+export const createMerchantAndAddress = async (req: Request, res: Response) => {
+    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+
+    try {
+        const merchantData = {
+            name,
+            description,
+            category,
+            subCategory,
+            tags,
+            phoneNumber,
+            email,
+            imageUrls,
+            menuUrls,
+            pinCode,
+            openingHours,
+            instagram,
+            createdAt: new Date() // Date de création
+        };
+
+        const merchantRef = await db.collection('merchants').add(merchantData);
+
+        if (address) {
+            const addressData = {
+                ...address, 
+                merchantId: merchantRef.id, 
+                createdAt: new Date() 
+            };
+            await db.collection('addresses').add(addressData);
+        }
+
+        res.status(201).send({ message: "Merchant and address created successfully", merchantId: merchantRef.id });
+    } catch (error) {
+        res.status(500).send({ message: "Error creating merchant and address", error: error.message });
+    }
+};
+
+
+
+
+
+
 export const deleteMerchant = async (req: Request, res: Response) => {
     const merchantId = req.params.merchantId;
 

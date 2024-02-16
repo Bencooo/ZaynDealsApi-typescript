@@ -29,5 +29,6 @@ const authMiddleware_1 = require("../../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 router.post('/create', UserController.createUser);
 router.get('/info', authMiddleware_1.checkAuth, UserController.getUserInfo);
+router.put('/update', authMiddleware_1.checkAuth, UserController.updateUser);
 exports.default = router;
 //# sourceMappingURL=userRoutes.js.map

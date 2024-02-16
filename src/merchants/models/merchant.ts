@@ -17,3 +17,11 @@ export interface Merchant {
     // TODO Reviews (beta)
     // TODO Add Tags (beta)
 }
+
+export interface Address {
+    id: string;
+    street: string;
+    area: string;
+    city: string;
+    postalcode: string;
+}
