@@ -4,7 +4,7 @@ import { Merchant } from '../models/merchant';
 import { Query, CollectionReference, DocumentData } from '@google-cloud/firestore';
 
 export const createMerchant = async (req: Request, res: Response) => {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
 
     try {
         const newMerchant = {
@@ -16,6 +16,7 @@ export const createMerchant = async (req: Request, res: Response) => {
             //address,
             phoneNumber,
             email,
+            thumbnail,
             imageUrls,
             menuUrls,
             pinCode,
@@ -32,10 +33,8 @@ export const createMerchant = async (req: Request, res: Response) => {
 };
 
 
-
-
 export const createMerchantAndAddress = async (req: Request, res: Response) => {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, note, reviews, pinCode, openingHours, instagram } = req.body;
 
     try {
         const merchantData = {
@@ -46,12 +45,15 @@ export const createMerchantAndAddress = async (req: Request, res: Response) => {
             tags,
             phoneNumber,
             email,
+            thumbnail,
             imageUrls,
             menuUrls,
+            note,
+            reviews,
             pinCode,
             openingHours,
             instagram,
-            createdAt: new Date() // Date de création
+            createdAt: new Date() 
         };
 
         const merchantRef = await db.collection('merchants').add(merchantData);
@@ -70,10 +72,6 @@ export const createMerchantAndAddress = async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error creating merchant and address", error: error.message });
     }
 };
-
-
-
-
 
 
 export const deleteMerchant = async (req: Request, res: Response) => {
@@ -233,15 +231,32 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
             return;
         }
 
-        const merchants = snapshot.docs.map(doc => ({
-            id: doc.id,
-            name: doc.data().name,
-            category: doc.data().category,
-            subCategory: doc.data().subCategory,
-            tags: doc.data().tags,
-            address: doc.data().address,
-            imageUrls: doc.data().imageUrls,
-        }));
+        // Récupérer les adresses pour chaque marchand trouvé
+        const merchantsPromises = snapshot.docs.map(async (doc) => {
+            const merchantData = doc.data();
+            const merchantId = doc.id;
+
+            // Trouver l'adresse associée à ce marchand
+            const addressesSnapshot = await db.collection('addresses')
+                .where('merchantId', '==', merchantId)
+                .get();
+
+            const area = addressesSnapshot.empty ? null : addressesSnapshot.docs[0].data().area;
+
+            // Renvoyer uniquement les champs spécifiés
+            return {
+                id: merchantId,
+                name: merchantData.name,
+                category: merchantData.category,
+                subCategory: merchantData.subCategory,
+                tags: merchantData.tags,
+                area, // area récupérée de l'adresse
+                thumbnail: merchantData.thumbnail,
+                note: merchantData.note,
+            };
+        });
+
+        const merchants = await Promise.all(merchantsPromises);
 
         res.status(200).send(merchants);
     } catch (error) {
@@ -249,4 +264,41 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
         res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 };
+
+export const getMerchantByName = async (req: Request, res: Response): Promise<void> => {
+    // Assurez-vous que `name` est une chaîne. S'il ne l'est pas, convertissez-le ou gérez l'erreur.
+    const name = typeof req.query.name === 'string' ? req.query.name.trim() : null;
+
+    // Si `name` est nul ou une chaîne vide, retournez `null`.
+    if (!name) {
+        res.status(200).send(null);
+        return;
+    }
+
+    try {
+        const merchantsRef = db.collection('merchants');
+        const snapshot = await merchantsRef
+            .where('name', '>=', name)
+            .where('name', '<=', name + '\uf8ff')
+            .get();
+
+        if (snapshot.empty) {
+            res.status(404).send('No merchant found with the given name');
+            return;
+        }
+
+        let merchants: Partial<Merchant>[] = [];
+        snapshot.forEach(doc => {
+            const merchant: Partial<Merchant> = { id: doc.id, ...doc.data() };
+            merchants.push(merchant);
+        });
+
+        res.status(200).send(merchants);
+    } catch (error) {
+        res.status(500).send({ message: 'Error getting merchant by name', error: error.message });
+    }
+};
+
+
+
 

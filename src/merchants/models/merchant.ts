@@ -8,8 +8,11 @@ export interface Merchant {
     address: Address;//
     phoneNumber: string;
     email: string;
+    thumbnail: string;
     imageUrls: string[];//
     menuUrls: string[]; // (beta)
+    note: string;
+    reviews: string[];
     pinCode: string;
     openingHours: string[];
     createdAt: Date;
