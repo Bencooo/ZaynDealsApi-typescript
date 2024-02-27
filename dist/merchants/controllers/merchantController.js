@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
+exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
 const firebase_1 = require("../../utils/firebase");
 const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
     try {
         const newMerchant = {
             name,
@@ -23,6 +23,7 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
             //address,
             phoneNumber,
             email,
+            thumbnail,
             imageUrls,
             menuUrls,
             pinCode,
@@ -39,7 +40,7 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.createMerchant = createMerchant;
 const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, note, reviews, pinCode, openingHours, instagram } = req.body;
     try {
         const merchantData = {
             name,
@@ -49,12 +50,15 @@ const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0,
             tags,
             phoneNumber,
             email,
+            thumbnail,
             imageUrls,
             menuUrls,
+            note,
+            reviews,
             pinCode,
             openingHours,
             instagram,
-            createdAt: new Date() // Date de création
+            createdAt: new Date()
         };
         const merchantRef = yield firebase_1.db.collection('merchants').add(merchantData);
         if (address) {
@@ -213,15 +217,28 @@ const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, func
             res.status(404).send({ message: 'No merchants found matching the criteria' });
             return;
         }
-        const merchants = snapshot.docs.map(doc => ({
-            id: doc.id,
-            name: doc.data().name,
-            category: doc.data().category,
-            subCategory: doc.data().subCategory,
-            tags: doc.data().tags,
-            address: doc.data().address,
-            imageUrls: doc.data().imageUrls,
+        // Récupérer les adresses pour chaque marchand trouvé
+        const merchantsPromises = snapshot.docs.map((doc) => __awaiter(void 0, void 0, void 0, function* () {
+            const merchantData = doc.data();
+            const merchantId = doc.id;
+            // Trouver l'adresse associée à ce marchand
+            const addressesSnapshot = yield firebase_1.db.collection('addresses')
+                .where('merchantId', '==', merchantId)
+                .get();
+            const area = addressesSnapshot.empty ? null : addressesSnapshot.docs[0].data().area;
+            // Renvoyer uniquement les champs spécifiés
+            return {
+                id: merchantId,
+                name: merchantData.name,
+                category: merchantData.category,
+                subCategory: merchantData.subCategory,
+                tags: merchantData.tags,
+                area, // area récupérée de l'adresse
+                thumbnail: merchantData.thumbnail,
+                note: merchantData.note,
+            };
         }));
+        const merchants = yield Promise.all(merchantsPromises);
         res.status(200).send(merchants);
     }
     catch (error) {
@@ -230,4 +247,34 @@ const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getMerchantCategory = getMerchantCategory;
+const getMerchantByName = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Assurez-vous que `name` est une chaîne. S'il ne l'est pas, convertissez-le ou gérez l'erreur.
+    const name = typeof req.query.name === 'string' ? req.query.name.trim() : null;
+    // Si `name` est nul ou une chaîne vide, retournez `null`.
+    if (!name) {
+        res.status(200).send(null);
+        return;
+    }
+    try {
+        const merchantsRef = firebase_1.db.collection('merchants');
+        const snapshot = yield merchantsRef
+            .where('name', '>=', name)
+            .where('name', '<=', name + '\uf8ff')
+            .get();
+        if (snapshot.empty) {
+            res.status(404).send('No merchant found with the given name');
+            return;
+        }
+        let merchants = [];
+        snapshot.forEach(doc => {
+            const merchant = Object.assign({ id: doc.id }, doc.data());
+            merchants.push(merchant);
+        });
+        res.status(200).send(merchants);
+    }
+    catch (error) {
+        res.status(500).send({ message: 'Error getting merchant by name', error: error.message });
+    }
+});
+exports.getMerchantByName = getMerchantByName;
 //# sourceMappingURL=merchantController.js.map

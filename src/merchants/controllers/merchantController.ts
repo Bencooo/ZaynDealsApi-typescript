@@ -34,7 +34,7 @@ export const createMerchant = async (req: Request, res: Response) => {
 
 
 export const createMerchantAndAddress = async (req: Request, res: Response) => {
-    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, note, reviews, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
 
     try {
         const merchantData = {
@@ -48,8 +48,7 @@ export const createMerchantAndAddress = async (req: Request, res: Response) => {
             thumbnail,
             imageUrls,
             menuUrls,
-            note,
-            reviews,
+            averageRate,
             pinCode,
             openingHours,
             instagram,

@@ -11,8 +11,9 @@ export interface Merchant {
     thumbnail: string;
     imageUrls: string[];//
     menuUrls: string[]; // (beta)
-    note: string;
-    reviews: string[];
+    averageRate: string;
+    //note: string;
+    //reviews: string[];
     pinCode: string;
     openingHours: string[];
     createdAt: Date;
