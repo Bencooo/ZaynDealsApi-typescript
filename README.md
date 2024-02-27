@@ -132,10 +132,20 @@ Returns a list of merchants matching the criteria.
     "category": "Merchant Category",
     "subCategory": "Merchant SubCategory",
     "tags": ["tag1", "tag2"],
-    "address": "Merchant Address",
-    "imageUrls": ["url1", "url2"]
+    "area": "Merchant Area",
+    "thumbnail": "urlToThumbnail",
+    "note": "Merchant Note"
   }
 ]
+```
+##### 400 Bad Request
+
+Category not provided in the request.
+
+```json
+{
+  "message": "Category is required"
+}
 ```
 ##### 404 Not Found
 

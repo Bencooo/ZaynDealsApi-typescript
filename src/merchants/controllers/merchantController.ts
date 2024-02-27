@@ -202,16 +202,21 @@ export const updateMerchant = async (req: Request, res: Response): Promise<void>
 export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
     const { category, subCategory, lastDocId, limit } = req.query;
 
+    if (!category) {
+        res.status(400).send({ message: 'Category is required' });
+        return;
+    }
+
     const limitSize = parseInt(limit as string, 10) || 25; // Défaut à 25 si non spécifié
 
     try {
         let query: Query<DocumentData> = db.collection('merchants');
 
 
-        // Filtres de catégorie et sous-catégorie
-        if (category) {
+        /*if (category) {
             query = query.where('category', '==', category);
-        }
+        }*/
+
         if (subCategory) {
             query = query.where('subCategory', '==', subCategory);
         }
@@ -251,7 +256,7 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
                 tags: merchantData.tags,
                 area, // area récupérée de l'adresse
                 thumbnail: merchantData.thumbnail,
-                note: merchantData.note,
+                averageRate: merchantData.averageRate,
             };
         });
 
@@ -295,6 +300,45 @@ export const getMerchantByName = async (req: Request, res: Response): Promise<vo
         res.status(200).send(merchants);
     } catch (error) {
         res.status(500).send({ message: 'Error getting merchant by name', error: error.message });
+    }
+};
+
+
+
+export const getMerchantById = async (req: Request, res: Response) => {
+    const merchantId = req.params.id; // Supposons que l'ID du marchand soit passé en paramètre d'URL
+
+    try {
+        // Récupérer le document du marchand
+        const merchantDoc = await db.collection('merchants').doc(merchantId).get();
+
+        if (!merchantDoc.exists) {
+            res.status(404).send({ message: 'Merchant not found.' });
+            return;
+        }
+
+        const merchantData = merchantDoc.data();
+
+        // Supposons que l'adresse est stockée séparément et doit être jointe
+        const addressSnapshot = await db.collection('addresses').where('merchantId', '==', merchantId).get();
+        let addressData = {};
+
+        if (!addressSnapshot.empty) {
+            // Prendre la première adresse trouvée pour ce marchand
+            addressData = addressSnapshot.docs[0].data();
+        }
+
+        // Construire le résultat avec les informations du marchand et l'adresse
+        const result = {
+            id: merchantDoc.id,
+            ...merchantData,
+            address: addressData // Cela inclut les détails de l'adresse récupérés séparément
+        };
+
+        res.status(200).send(result);
+    } catch (error) {
+        console.error("Error getting merchant by ID:", error);
+        res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 };
 
