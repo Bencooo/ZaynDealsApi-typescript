@@ -117,6 +117,7 @@ This endpoint retrieves merchants based on category and subCategory criteria. It
 | `subCategory` | String  | The subCategory to further filter merchants within a category. | No       |
 | `lastDocId`   | String  | The document ID of the last merchant received, for pagination. | No       |
 | `limit`       | Integer | The maximum number of merchants to return. Defaults to 25 if not specified. | No       |
+| `tags`    | String  | The tag to filter merchants by. Multiple tags can be specified, separated by commas.                    | No       |
 
 #### Responses
 
