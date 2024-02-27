@@ -200,12 +200,12 @@ export const updateMerchant = async (req: Request, res: Response): Promise<void>
 };*/
 
 export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
-    const { category, subCategory, lastDocId, limit } = req.query;
+    const { category, subCategory, tags, lastDocId, limit } = req.query;
 
-    if (!category) {
+    /*if (!category) {
         res.status(400).send({ message: 'Category is required' });
         return;
-    }
+    }*/
 
     const limitSize = parseInt(limit as string, 10) || 25; // Défaut à 25 si non spécifié
 
@@ -213,12 +213,17 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
         let query: Query<DocumentData> = db.collection('merchants');
 
 
-        /*if (category) {
+        if (category) {
             query = query.where('category', '==', category);
-        }*/
+        }
 
         if (subCategory) {
             query = query.where('subCategory', '==', subCategory);
+        }
+
+        if (tags) {
+            // Assumer que tags est un seul tag pour la simplicité
+            query = query.where('tags', 'array-contains', tags);
         }
 
         // Pagination avec startAfter si lastDocId est fourni
