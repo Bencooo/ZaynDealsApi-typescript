@@ -11,15 +11,12 @@ export interface Merchant {
     thumbnail: string;
     imageUrls: string[];//
     menuUrls: string[]; // (beta)
-    averageRate: string;
-    //note: string;
-    //reviews: string[];
+    averageRate: number;
     pinCode: string;
     openingHours: string[];
     createdAt: Date;
     instagram:string;
     // TODO Reviews (beta)
-    // TODO Add Tags (beta)
 }
 
 export interface Address {

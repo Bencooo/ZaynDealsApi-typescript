@@ -1,5 +1,5 @@
 export interface UserSubscription {
-    userSubscriptionId: string; // TODO rename to Id
+    id: string; // TODO rename to Id
     userId: string;
     subscriptionId: string;
     startDate: Date;

@@ -3,6 +3,6 @@ import * as UserSubscriptionController from '../controllers/userSubscriptionCont
 
 const router = Router();
 
-router.post('/', UserSubscriptionController.createUserSubscription);
+router.post('', UserSubscriptionController.createUserSubscription);
 
 export default router;

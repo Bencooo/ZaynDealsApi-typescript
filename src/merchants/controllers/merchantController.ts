@@ -2,6 +2,16 @@ import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
 import { Merchant } from '../models/merchant';
 import { Query, CollectionReference, DocumentData } from '@google-cloud/firestore';
+import { Coupon } from '../../coupons/models/coupon';
+import { UsedCoupon } from '../../usedCoupons/models/usedCoupon';
+
+interface RequestWithUser extends Request {
+    user: {
+        uid: string;
+        // Incluez d'autres propriétés de `user` si nécessaire
+    };
+}
+
 
 export const createMerchant = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
@@ -32,7 +42,6 @@ export const createMerchant = async (req: Request, res: Response) => {
     }
 };
 
-
 export const createMerchantAndAddress = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
 
@@ -52,16 +61,16 @@ export const createMerchantAndAddress = async (req: Request, res: Response) => {
             pinCode,
             openingHours,
             instagram,
-            createdAt: new Date() 
+            createdAt: new Date()
         };
 
         const merchantRef = await db.collection('merchants').add(merchantData);
 
         if (address) {
             const addressData = {
-                ...address, 
-                merchantId: merchantRef.id, 
-                createdAt: new Date() 
+                ...address,
+                merchantId: merchantRef.id,
+                createdAt: new Date()
             };
             await db.collection('addresses').add(addressData);
         }
@@ -71,7 +80,6 @@ export const createMerchantAndAddress = async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error creating merchant and address", error: error.message });
     }
 };
-
 
 export const deleteMerchant = async (req: Request, res: Response) => {
     const merchantId = req.params.merchantId;
@@ -310,43 +318,113 @@ export const getMerchantByName = async (req: Request, res: Response): Promise<vo
 
 
 
-export const getMerchantById = async (req: Request, res: Response) => {
-    const merchantId = req.params.id; // Supposons que l'ID du marchand soit passé en paramètre d'URL
+export const getMerchantById = async (req: RequestWithUser, res: Response) => {
+    const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
+    const userId = req.user.uid
+    console.log('first', req.user.uid)
 
     try {
-        // Récupérer le document du marchand
+        //Get Merchant with Address
         const merchantDoc = await db.collection('merchants').doc(merchantId).get();
+        const addressSnapshot = await db.collection('addresses').where('merchantId', '==', merchantId).get();
+        let addressData = {};
+        const merchantData = merchantDoc.data();
 
         if (!merchantDoc.exists) {
             res.status(404).send({ message: 'Merchant not found.' });
             return;
         }
-
-        const merchantData = merchantDoc.data();
-
-        // Supposons que l'adresse est stockée séparément et doit être jointe
-        const addressSnapshot = await db.collection('addresses').where('merchantId', '==', merchantId).get();
-        let addressData = {};
-
         if (!addressSnapshot.empty) {
             // Prendre la première adresse trouvée pour ce marchand
             addressData = addressSnapshot.docs[0].data();
         }
 
-        // Construire le résultat avec les informations du marchand et l'adresse
+        //Get Coupons
+        const couponsSnapshot = await db.collection('coupons').where('merchantId', '==', merchantId).get();
+        let couponsData: Coupon[] = []; // Utilisez le type Coupon[] pour typer correctement la variable
+        if (!couponsSnapshot.empty) {
+            couponsData = couponsSnapshot.docs.map(doc => {
+                const coupon: Coupon = {
+                    id: doc.id, 
+                    ...doc.data() as Coupon 
+                };
+                return coupon;
+            });
+        }
+
+        //Get Valid User Subcription
+        const isSubscriptionValid = await checkUserSubscriptionValidity(userId);
+        if (!isSubscriptionValid) {
+            couponsData = couponsData.map(coupon => ({
+                ...coupon,
+                state: 'unavailable'
+            }));
+        }
+        console.log('first', isSubscriptionValid);
+
+        //Get used Coupons
+        
+        // Récupérer les coupons utilisés par l'utilisateur
+        const usedCouponsSnapshot = await db.collection('usedCoupons').where('userId', '==', userId).get();
+        let usedCouponsIds = new Set();
+        console.log('usedCouponsIds', usedCouponsIds)
+        if (!usedCouponsSnapshot.empty) {
+            usedCouponsIds = new Set(usedCouponsSnapshot.docs.map(doc => doc.data().couponId));
+        }
+        console.log('usedCouponsIds', usedCouponsIds)
+
+        // Ajuster le champ 'state' pour chaque coupon
+        couponsData = couponsData.map(coupon => {
+
+            console.log('Id coupon', coupon.id)
+            if (usedCouponsIds.has(coupon.id)) {
+                return { ...coupon, state: 'consumed' }; // Marquer comme utilisé
+            } else {
+                // Si l'abonnement n'est pas valide, tous les coupons deviennent 'unavailable'
+                return { ...coupon, state: 'available'};
+                //return { ...coupon, state: isSubscriptionValid ? 'available' : 'unavailable' };
+            }
+        });
+
+
+
         const result = {
             id: merchantDoc.id,
             ...merchantData,
-            address: addressData // Cela inclut les détails de l'adresse récupérés séparément
+            address: addressData, // Cela inclut les détails de l'adresse récupérés séparément
+            coupons: couponsData,
         };
 
         res.status(200).send(result);
     } catch (error) {
-        console.error("Error getting merchant by ID:", error);
         res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 };
 
+
+async function checkUserSubscriptionValidity(userId: string) {
+    const subscriptionSnapshot = await db.collection('userSubscriptions').where('userId', '==', userId).get();
+
+    // Assurez-vous que l'instantané n'est pas vide
+    if (subscriptionSnapshot.empty) {
+        console.log('Aucun document correspondant trouvé.');
+        return false;
+    }
+
+    const today = new Date();
+    let isValid = false;
+
+    // Parcourir chaque document d'abonnement pour l'utilisateur
+    for (const doc of subscriptionSnapshot.docs) {
+        const subscription = doc.data();
+        const endDate = subscription.endDate.toDate();
+
+        if (endDate >= today) {
+            return true; // Au moins un abonnement valide trouvé
+        }
+    }
+    return isValid;
+}
 
 
 

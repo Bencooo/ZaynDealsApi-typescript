@@ -3,7 +3,7 @@ import { db } from '../../utils/firebase';
 import { UserSubscription } from '../models/userSubscription';
 
 export const createUserSubscription = async (req: Request, res: Response): Promise<void> => {
-    const { userSubscriptionId, userId, subscriptionId, startDate, endDate } = req.body;
+    const { userId, subscriptionId, startDate, endDate } = req.body;
 
     try {
         // Vérifier si l'utilisateur existe
@@ -23,7 +23,7 @@ export const createUserSubscription = async (req: Request, res: Response): Promi
         }
 
         // Créer la souscription utilisateur
-        const newUserSubscriptionRef = db.collection('userSubscriptions').doc(userSubscriptionId);
+        const newUserSubscriptionRef = db.collection('userSubscriptions').doc();
         await newUserSubscriptionRef.set({
             userId,
             subscriptionId,
@@ -31,7 +31,7 @@ export const createUserSubscription = async (req: Request, res: Response): Promi
             endDate: new Date(endDate)
         });
 
-        res.status(201).send({ message: "User subscription created successfully", id: newUserSubscriptionRef.id });
+        res.status(201).send({ message: "User subscription created successfully"});
     } catch (error) {
         res.status(500).send({ message: "Error creating user subscription", error: error.message });
     }

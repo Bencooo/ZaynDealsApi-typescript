@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
+exports.getMerchantById = exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
 const firebase_1 = require("../../utils/firebase");
 const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
@@ -40,7 +40,7 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.createMerchant = createMerchant;
 const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, note, reviews, pinCode, openingHours, instagram } = req.body;
+    const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
     try {
         const merchantData = {
             name,
@@ -53,8 +53,7 @@ const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0,
             thumbnail,
             imageUrls,
             menuUrls,
-            note,
-            reviews,
+            averageRate,
             pinCode,
             openingHours,
             instagram,
@@ -195,16 +194,23 @@ exports.updateMerchant = updateMerchant;
     }
 };*/
 const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { category, subCategory, lastDocId, limit } = req.query;
+    const { category, subCategory, tags, lastDocId, limit } = req.query;
+    /*if (!category) {
+        res.status(400).send({ message: 'Category is required' });
+        return;
+    }*/
     const limitSize = parseInt(limit, 10) || 25; // Défaut à 25 si non spécifié
     try {
         let query = firebase_1.db.collection('merchants');
-        // Filtres de catégorie et sous-catégorie
         if (category) {
             query = query.where('category', '==', category);
         }
         if (subCategory) {
             query = query.where('subCategory', '==', subCategory);
+        }
+        if (tags) {
+            // Assumer que tags est un seul tag pour la simplicité
+            query = query.where('tags', 'array-contains', tags);
         }
         // Pagination avec startAfter si lastDocId est fourni
         const lastDocId = req.query.lastDocId;
@@ -235,7 +241,7 @@ const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, func
                 tags: merchantData.tags,
                 area, // area récupérée de l'adresse
                 thumbnail: merchantData.thumbnail,
-                note: merchantData.note,
+                averageRate: merchantData.averageRate,
             };
         }));
         const merchants = yield Promise.all(merchantsPromises);
@@ -277,4 +283,32 @@ const getMerchantByName = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getMerchantByName = getMerchantByName;
+const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const merchantId = req.params.id; // Supposons que l'ID du marchand soit passé en paramètre d'URL
+    try {
+        // Récupérer le document du marchand
+        const merchantDoc = yield firebase_1.db.collection('merchants').doc(merchantId).get();
+        if (!merchantDoc.exists) {
+            res.status(404).send({ message: 'Merchant not found.' });
+            return;
+        }
+        const merchantData = merchantDoc.data();
+        // Supposons que l'adresse est stockée séparément et doit être jointe
+        const addressSnapshot = yield firebase_1.db.collection('addresses').where('merchantId', '==', merchantId).get();
+        let addressData = {};
+        if (!addressSnapshot.empty) {
+            // Prendre la première adresse trouvée pour ce marchand
+            addressData = addressSnapshot.docs[0].data();
+        }
+        // Construire le résultat avec les informations du marchand et l'adresse
+        const result = Object.assign(Object.assign({ id: merchantDoc.id }, merchantData), { address: addressData // Cela inclut les détails de l'adresse récupérés séparément
+         });
+        res.status(200).send(result);
+    }
+    catch (error) {
+        console.error("Error getting merchant by ID:", error);
+        res.status(500).send({ message: "Internal Server Error", error: error.message });
+    }
+});
+exports.getMerchantById = getMerchantById;
 //# sourceMappingURL=merchantController.js.map

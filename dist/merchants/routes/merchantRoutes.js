@@ -32,6 +32,7 @@ router.delete('/:merchantId', MerchantController.deleteMerchant);
 router.get('/foods', MerchantController.getAllFoodMerchants);
 router.put('/:merchantId', MerchantController.updateMerchant);
 router.get('/search', MerchantController.getMerchantByName);
+router.get('/:merchantId', MerchantController.getMerchantById);
 router.get('', MerchantController.getMerchantCategory);
 exports.default = router;
 //# sourceMappingURL=merchantRoutes.js.map
