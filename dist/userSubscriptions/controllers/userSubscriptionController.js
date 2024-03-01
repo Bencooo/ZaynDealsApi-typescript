@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUserSubscription = void 0;
 const firebase_1 = require("../../utils/firebase");
 const createUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userSubscriptionId, userId, subscriptionId, startDate, endDate } = req.body;
+    const { userId, subscriptionId, startDate, endDate } = req.body;
     try {
         // Vérifier si l'utilisateur existe
         const userRef = firebase_1.db.collection('users').doc(userId);
@@ -29,14 +29,14 @@ const createUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, f
             return;
         }
         // Créer la souscription utilisateur
-        const newUserSubscriptionRef = firebase_1.db.collection('userSubscriptions').doc(userSubscriptionId);
+        const newUserSubscriptionRef = firebase_1.db.collection('userSubscriptions').doc();
         yield newUserSubscriptionRef.set({
             userId,
             subscriptionId,
             startDate: new Date(startDate),
             endDate: new Date(endDate)
         });
-        res.status(201).send({ message: "User subscription created successfully", id: newUserSubscriptionRef.id });
+        res.status(201).send({ message: "User subscription created successfully" });
     }
     catch (error) {
         res.status(500).send({ message: "Error creating user subscription", error: error.message });

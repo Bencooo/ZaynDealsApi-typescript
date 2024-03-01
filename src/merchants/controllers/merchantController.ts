@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
 import { Merchant } from '../models/merchant';
-import { Query, CollectionReference, DocumentData } from '@google-cloud/firestore';
+import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
-import { UsedCoupon } from '../../usedCoupons/models/usedCoupon';
+import { checkUserSubscription } from '../../middlewares/subscriptionMiddlecare';
 
 interface RequestWithUser extends Request {
     user: {
@@ -14,35 +14,6 @@ interface RequestWithUser extends Request {
 
 
 export const createMerchant = async (req: Request, res: Response) => {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
-
-    try {
-        const newMerchant = {
-            name,
-            description,
-            category,
-            subCategory,
-            tags,
-            //address,
-            phoneNumber,
-            email,
-            thumbnail,
-            imageUrls,
-            menuUrls,
-            pinCode,
-            openingHours,
-            instagram,
-            createdAt: new Date() // Date de création
-        };
-
-        const docRef = await db.collection('merchants').add(newMerchant);
-        res.status(201).send({ message: "Merchant created successfully", merchantId: docRef.id });
-    } catch (error) {
-        res.status(500).send({ message: "Error creating merchant", error: error.message });
-    }
-};
-
-export const createMerchantAndAddress = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
 
     try {
@@ -126,86 +97,6 @@ export const updateMerchant = async (req: Request, res: Response): Promise<void>
         res.status(500).send({ message: "Error updating merchant", error: error.message });
     }
 };
-
-/*export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
-    const { category, subCategory } = req.query; // Récupération de la catégorie et de la sous-catégorie depuis la requête
-
-    try {
-        let query = db.collection('merchants').where('category', '==', category);
-
-        // Si une sous-catégorie est spécifiée, ajoute un filtre supplémentaire pour la sous-catégorie
-        if (subCategory) {
-            query = query.where('subCategory', '==', subCategory);
-        }
-
-        const snapshot = await query.get();
-
-        if (snapshot.empty) {
-            res.status(404).send({ message: 'Not Found' });
-            return;
-        }
-
-        let merchants: Partial<Merchant>[] = [];
-        snapshot.forEach(doc => {
-            merchants.push({ id: doc.id, ...doc.data() });
-        });
-
-        res.status(200).send(merchants);
-    } catch (error) {
-        console.error("Error getting merchants:", error);
-        res.status(500).send({ message: 'Internal Server Error', error: error.message });
-    }
-};*/
-
-/*export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
-    const { category, subCategory, startAt, limit } = req.query;
-
-    // Convertir startAt et limit en nombres, avec des valeurs par défaut si non spécifiées
-    const startAtIndex = parseInt(startAt as string, 10) || 0; // Défaut à 0 si non spécifié
-    const limitSize = parseInt(limit as string, 10) || 25; // Défaut à 25 si non spécifié
-
-    try {
-        let query: Query<DocumentData> | CollectionReference<DocumentData> = db.collection('merchants');
-
-
-        // Applique le filtre de catégorie seulement si la catégorie est spécifiée
-        if (category) {
-            query = query.where('category', '==', category);
-        }
-
-        // Applique le filtre de sous-catégorie seulement si la sous-catégorie est spécifiée
-        if (subCategory && category) { // S'assure que subCategory est utilisée uniquement si category est aussi spécifiée
-            query = query.where('subCategory', '==', subCategory);
-        }
-
-        // Appliquer la pagination
-        // Note : Firestore ne supporte pas directement offset comme SQL. Vous pourriez utiliser startAfter
-        // avec un document de référence ou une valeur pour simuler un offset, mais cela nécessite de récupérer
-        // et de passer le dernier document de la page précédente comme référence pour startAfter.
-        // Ici, nous utilisons simplement limit pour simplifier.
-        query = query.limit(limitSize);
-
-        const snapshot = await query.get();
-
-        if (snapshot.empty) {
-            res.status(404).send({ message: 'No merchants found matching the criteria' });
-            return;
-        }
-
-        let merchants: Partial<Merchant>[] = [];
-        snapshot.forEach(doc => {
-            merchants.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Si vous souhaitez implémenter une pagination efficace avec startAfter, vous devez ajuster cette partie.
-        // Cela implique généralement de renvoyer également le dernier document de la requête actuelle au client pour une pagination future.
-
-        res.status(200).send(merchants.slice(startAtIndex, startAtIndex + limitSize)); // Ceci est une simplification. Voir la note ci-dessus.
-    } catch (error) {
-        console.error("Error getting merchants by category and subCategory:", error);
-        res.status(500).send({ message: 'Error getting merchants', error: error.message });
-    }
-};*/
 
 export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
     const { category, subCategory, tags, lastDocId, limit } = req.query;
@@ -316,12 +207,9 @@ export const getMerchantByName = async (req: Request, res: Response): Promise<vo
     }
 };
 
-
-
 export const getMerchantById = async (req: RequestWithUser, res: Response) => {
     const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
     const userId = req.user.uid
-    console.log('first', req.user.uid)
 
     try {
         //Get Merchant with Address
@@ -353,36 +241,32 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         }
 
         //Get Valid User Subcription
-        const isSubscriptionValid = await checkUserSubscriptionValidity(userId);
+        const isSubscriptionValid = await checkUserSubscription(userId);
         if (!isSubscriptionValid) {
             couponsData = couponsData.map(coupon => ({
                 ...coupon,
                 state: 'unavailable'
             }));
         }
-        console.log('first', isSubscriptionValid);
 
         //Get used Coupons
         
         // Récupérer les coupons utilisés par l'utilisateur
         const usedCouponsSnapshot = await db.collection('usedCoupons').where('userId', '==', userId).get();
         let usedCouponsIds = new Set();
-        console.log('usedCouponsIds', usedCouponsIds)
         if (!usedCouponsSnapshot.empty) {
             usedCouponsIds = new Set(usedCouponsSnapshot.docs.map(doc => doc.data().couponId));
         }
-        console.log('usedCouponsIds', usedCouponsIds)
 
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
 
-            console.log('Id coupon', coupon.id)
             if (usedCouponsIds.has(coupon.id)) {
-                return { ...coupon, state: 'consumed' }; // Marquer comme utilisé
+                return { ...coupon, state: isSubscriptionValid ? 'consumed' : 'unavailable'}; // Marquer comme utilisé
             } else {
                 // Si l'abonnement n'est pas valide, tous les coupons deviennent 'unavailable'
-                return { ...coupon, state: 'available'};
-                //return { ...coupon, state: isSubscriptionValid ? 'available' : 'unavailable' };
+                //return { ...coupon, state: 'available'};
+                return { ...coupon, state: isSubscriptionValid ? 'available' : 'unavailable' };
             }
         });
 
@@ -402,29 +286,7 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
 };
 
 
-async function checkUserSubscriptionValidity(userId: string) {
-    const subscriptionSnapshot = await db.collection('userSubscriptions').where('userId', '==', userId).get();
 
-    // Assurez-vous que l'instantané n'est pas vide
-    if (subscriptionSnapshot.empty) {
-        console.log('Aucun document correspondant trouvé.');
-        return false;
-    }
-
-    const today = new Date();
-    let isValid = false;
-
-    // Parcourir chaque document d'abonnement pour l'utilisateur
-    for (const doc of subscriptionSnapshot.docs) {
-        const subscription = doc.data();
-        const endDate = subscription.endDate.toDate();
-
-        if (endDate >= today) {
-            return true; // Au moins un abonnement valide trouvé
-        }
-    }
-    return isValid;
-}
 
 
 

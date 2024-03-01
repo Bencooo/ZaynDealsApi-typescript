@@ -26,6 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const UserSubscriptionController = __importStar(require("../controllers/userSubscriptionController"));
 const router = (0, express_1.Router)();
-router.post('/', UserSubscriptionController.createUserSubscription);
+router.post('', UserSubscriptionController.createUserSubscription);
 exports.default = router;
 //# sourceMappingURL=userSubscriptionRoutes.js.map
