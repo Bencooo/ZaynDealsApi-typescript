@@ -24,15 +24,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const MerchantController = __importStar(require("../controllers/merchantController"));
 const authMiddleware_1 = require("../../middlewares/authMiddleware");
+const MerchantController = __importStar(require("../controllers/merchantController"));
 const router = (0, express_1.Router)();
-router.post('/create', MerchantController.createMerchantAndAddress);
+router.post('/create', MerchantController.createMerchant);
+router.get('/:merchantId', authMiddleware_1.checkAuth, MerchantController.getMerchantById);
+router.get('', MerchantController.getMerchantCategory);
 //router.delete('/:merchantId', MerchantController.deleteMerchant);
 //router.get('/foods', MerchantController.getAllFoodMerchants);
 //router.put('/:merchantId', MerchantController.updateMerchant);
 //router.get('/search', MerchantController.getMerchantByName);
-router.get('/:merchantId', authMiddleware_1.checkAuth, MerchantController.getMerchantById);
-router.get('', MerchantController.getMerchantCategory);
 exports.default = router;
 //# sourceMappingURL=merchantRoutes.js.map

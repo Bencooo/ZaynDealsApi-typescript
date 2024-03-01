@@ -9,37 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMerchantById = exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchantAndAddress = exports.createMerchant = void 0;
+exports.getMerchantById = exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchant = void 0;
 const firebase_1 = require("../../utils/firebase");
+const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
 const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, category, subCategory, tags, address, phoneNumber, email, thumbnail, imageUrls, menuUrls, pinCode, openingHours, instagram } = req.body;
-    try {
-        const newMerchant = {
-            name,
-            description,
-            category,
-            subCategory,
-            tags,
-            //address,
-            phoneNumber,
-            email,
-            thumbnail,
-            imageUrls,
-            menuUrls,
-            pinCode,
-            openingHours,
-            instagram,
-            createdAt: new Date() // Date de création
-        };
-        const docRef = yield firebase_1.db.collection('merchants').add(newMerchant);
-        res.status(201).send({ message: "Merchant created successfully", merchantId: docRef.id });
-    }
-    catch (error) {
-        res.status(500).send({ message: "Error creating merchant", error: error.message });
-    }
-});
-exports.createMerchant = createMerchant;
-const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
     try {
         const merchantData = {
@@ -70,7 +43,7 @@ const createMerchantAndAddress = (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).send({ message: "Error creating merchant and address", error: error.message });
     }
 });
-exports.createMerchantAndAddress = createMerchantAndAddress;
+exports.createMerchant = createMerchant;
 const deleteMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const merchantId = req.params.merchantId;
     try {
@@ -115,84 +88,6 @@ const updateMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateMerchant = updateMerchant;
-/*export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
-    const { category, subCategory } = req.query; // Récupération de la catégorie et de la sous-catégorie depuis la requête
-
-    try {
-        let query = db.collection('merchants').where('category', '==', category);
-
-        // Si une sous-catégorie est spécifiée, ajoute un filtre supplémentaire pour la sous-catégorie
-        if (subCategory) {
-            query = query.where('subCategory', '==', subCategory);
-        }
-
-        const snapshot = await query.get();
-
-        if (snapshot.empty) {
-            res.status(404).send({ message: 'Not Found' });
-            return;
-        }
-
-        let merchants: Partial<Merchant>[] = [];
-        snapshot.forEach(doc => {
-            merchants.push({ id: doc.id, ...doc.data() });
-        });
-
-        res.status(200).send(merchants);
-    } catch (error) {
-        console.error("Error getting merchants:", error);
-        res.status(500).send({ message: 'Internal Server Error', error: error.message });
-    }
-};*/
-/*export const getMerchantCategory = async (req: Request, res: Response): Promise<void> => {
-    const { category, subCategory, startAt, limit } = req.query;
-
-    // Convertir startAt et limit en nombres, avec des valeurs par défaut si non spécifiées
-    const startAtIndex = parseInt(startAt as string, 10) || 0; // Défaut à 0 si non spécifié
-    const limitSize = parseInt(limit as string, 10) || 25; // Défaut à 25 si non spécifié
-
-    try {
-        let query: Query<DocumentData> | CollectionReference<DocumentData> = db.collection('merchants');
-
-
-        // Applique le filtre de catégorie seulement si la catégorie est spécifiée
-        if (category) {
-            query = query.where('category', '==', category);
-        }
-
-        // Applique le filtre de sous-catégorie seulement si la sous-catégorie est spécifiée
-        if (subCategory && category) { // S'assure que subCategory est utilisée uniquement si category est aussi spécifiée
-            query = query.where('subCategory', '==', subCategory);
-        }
-
-        // Appliquer la pagination
-        // Note : Firestore ne supporte pas directement offset comme SQL. Vous pourriez utiliser startAfter
-        // avec un document de référence ou une valeur pour simuler un offset, mais cela nécessite de récupérer
-        // et de passer le dernier document de la page précédente comme référence pour startAfter.
-        // Ici, nous utilisons simplement limit pour simplifier.
-        query = query.limit(limitSize);
-
-        const snapshot = await query.get();
-
-        if (snapshot.empty) {
-            res.status(404).send({ message: 'No merchants found matching the criteria' });
-            return;
-        }
-
-        let merchants: Partial<Merchant>[] = [];
-        snapshot.forEach(doc => {
-            merchants.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Si vous souhaitez implémenter une pagination efficace avec startAfter, vous devez ajuster cette partie.
-        // Cela implique généralement de renvoyer également le dernier document de la requête actuelle au client pour une pagination future.
-
-        res.status(200).send(merchants.slice(startAtIndex, startAtIndex + limitSize)); // Ceci est une simplification. Voir la note ci-dessus.
-    } catch (error) {
-        console.error("Error getting merchants by category and subCategory:", error);
-        res.status(500).send({ message: 'Error getting merchants', error: error.message });
-    }
-};*/
 const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { category, subCategory, tags, lastDocId, limit } = req.query;
     /*if (!category) {
@@ -286,7 +181,6 @@ exports.getMerchantByName = getMerchantByName;
 const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
     const userId = req.user.uid;
-    console.log('first', req.user.uid);
     try {
         //Get Merchant with Address
         const merchantDoc = yield firebase_1.db.collection('merchants').doc(merchantId).get();
@@ -311,30 +205,26 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
             });
         }
         //Get Valid User Subcription
-        const isSubscriptionValid = yield checkUserSubscriptionValidity(userId);
+        const isSubscriptionValid = yield (0, subscriptionMiddlecare_1.checkUserSubscription)(userId);
         if (!isSubscriptionValid) {
             couponsData = couponsData.map(coupon => (Object.assign(Object.assign({}, coupon), { state: 'unavailable' })));
         }
-        console.log('first', isSubscriptionValid);
         //Get used Coupons
         // Récupérer les coupons utilisés par l'utilisateur
         const usedCouponsSnapshot = yield firebase_1.db.collection('usedCoupons').where('userId', '==', userId).get();
         let usedCouponsIds = new Set();
-        console.log('usedCouponsIds', usedCouponsIds);
         if (!usedCouponsSnapshot.empty) {
             usedCouponsIds = new Set(usedCouponsSnapshot.docs.map(doc => doc.data().couponId));
         }
-        console.log('usedCouponsIds', usedCouponsIds);
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
-            console.log('Id coupon', coupon.id);
             if (usedCouponsIds.has(coupon.id)) {
-                return Object.assign(Object.assign({}, coupon), { state: 'consumed' }); // Marquer comme utilisé
+                return Object.assign(Object.assign({}, coupon), { state: isSubscriptionValid ? 'consumed' : 'unavailable' }); // Marquer comme utilisé
             }
             else {
                 // Si l'abonnement n'est pas valide, tous les coupons deviennent 'unavailable'
-                return Object.assign(Object.assign({}, coupon), { state: 'available' });
-                //return { ...coupon, state: isSubscriptionValid ? 'available' : 'unavailable' };
+                //return { ...coupon, state: 'available'};
+                return Object.assign(Object.assign({}, coupon), { state: isSubscriptionValid ? 'available' : 'unavailable' });
             }
         });
         const result = Object.assign(Object.assign({ id: merchantDoc.id }, merchantData), { address: addressData, coupons: couponsData });
@@ -345,25 +235,4 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getMerchantById = getMerchantById;
-function checkUserSubscriptionValidity(userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const subscriptionSnapshot = yield firebase_1.db.collection('userSubscriptions').where('userId', '==', userId).get();
-        // Assurez-vous que l'instantané n'est pas vide
-        if (subscriptionSnapshot.empty) {
-            console.log('Aucun document correspondant trouvé.');
-            return false;
-        }
-        const today = new Date();
-        let isValid = false;
-        // Parcourir chaque document d'abonnement pour l'utilisateur
-        for (const doc of subscriptionSnapshot.docs) {
-            const subscription = doc.data();
-            const endDate = subscription.endDate.toDate();
-            if (endDate >= today) {
-                return true; // Au moins un abonnement valide trouvé
-            }
-        }
-        return isValid;
-    });
-}
 //# sourceMappingURL=merchantController.js.map
