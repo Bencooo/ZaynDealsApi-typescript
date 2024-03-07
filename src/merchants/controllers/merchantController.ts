@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
-import { Merchant } from '../models/merchant';
+import { Merchant, merchantSchema } from '../models/merchant';
 import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
 import { checkUserSubscription } from '../../middlewares/subscriptionMiddlecare';
@@ -13,11 +13,11 @@ interface RequestWithUser extends Request {
 }
 
 
-export const createMerchant = async (req: Request, res: Response) => {
+/*export const createMerchant = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
 
     try {
-        const merchantData = {
+        const merchantData: Partial<Merchant> = {
             name,
             description,
             category,
@@ -50,7 +50,43 @@ export const createMerchant = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).send({ message: "Error creating merchant and address", error: error.message });
     }
+};*/
+
+
+export const createMerchant = async (req: Request, res: Response) => {
+    const { error, value } = merchantSchema.validate(req.body);
+
+    
+    if (error) {
+        return res.status(400).send({ message: "Validation error", error: error.details });
+    }
+
+    try {
+        // Destructure `value` pour séparer `address` des autres attributs
+        const { address, ...merchantDetails } = value;
+
+        // Créez le document du marchand sans l'adresse
+        const merchantRef = await db.collection('merchants').add({
+            ...merchantDetails, // Ceci exclut maintenant `address`
+            createdAt: new Date(),
+        });
+
+        // Si `address` est présent, ajoutez-le à la collection `addresses` avec une référence au marchand
+        if (address) {
+            await db.collection('addresses').add({
+                ...address,
+                merchantId: merchantRef.id,
+                createdAt: new Date(),
+            });
+        }
+
+        res.status(201).send({ message: "Merchant created successfully", merchantId: merchantRef.id });
+    } catch (error) {
+        res.status(500).send({ message: "Error creating merchant", error: error.message });
+    }
 };
+
+
 
 export const deleteMerchant = async (req: Request, res: Response) => {
     const merchantId = req.params.merchantId;
