@@ -4,6 +4,8 @@ import { Merchant, merchantSchema } from '../models/merchant';
 import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
 import { checkUserSubscription } from '../../middlewares/subscriptionMiddlecare';
+import { format } from 'date-fns';
+
 
 interface RequestWithUser extends Request {
     user: {
@@ -52,7 +54,6 @@ interface RequestWithUser extends Request {
     }
 };*/
 
-
 export const createMerchant = async (req: Request, res: Response) => {
     const { error, value } = merchantSchema.validate(req.body);
 
@@ -85,8 +86,6 @@ export const createMerchant = async (req: Request, res: Response) => {
         res.status(500).send({ message: "Error creating merchant", error: error.message });
     }
 };
-
-
 
 export const deleteMerchant = async (req: Request, res: Response) => {
     const merchantId = req.params.merchantId;
@@ -258,6 +257,9 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
             res.status(404).send({ message: 'Merchant not found.' });
             return;
         }
+        if (merchantData.createdAt) {
+            merchantData.createdAt = format(merchantData.createdAt.toDate(), 'yyyy-MM-dd HH:mm:ss');
+        }
         if (!addressSnapshot.empty) {
             // Prendre la première adresse trouvée pour ce marchand
             addressData = addressSnapshot.docs[0].data();
@@ -320,9 +322,3 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         res.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 };
-
-
-
-
-
-
