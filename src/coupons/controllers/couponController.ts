@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
-import { Coupon } from '../models/coupon';
+import { Coupon, couponSchema } from '../models/coupon';
 
-export const createCoupon = async (req: Request, res: Response): Promise<void> => {
+/*export const createCoupon = async (req: Request, res: Response): Promise<void> => {
     const { subscriptionIds, merchantId, title, description, price, rules, dealType, validityDate, reusable } = req.body;
 
     try {
@@ -33,7 +33,37 @@ export const createCoupon = async (req: Request, res: Response): Promise<void> =
     } catch (error) {
         res.status(500).send({ message: "Error creating coupon", error: error.message });
     }
+};*/
+
+export const createCoupon = async (req: Request, res: Response): Promise<void> => {
+    const { error, value } = couponSchema.validate(req.body);
+
+    if (error) {
+        res.status(400).send({ message: "Validation error", error: error.details });
+        return;
+    }
+
+    try {
+        // Vérifiez si le marchand existe
+        const merchantDoc = await db.collection('merchants').doc(value.merchantId).get();
+        if (!merchantDoc.exists) {
+            res.status(404).send({ message: "Merchant not found" });
+            return;
+        }
+
+        // Créer le coupon avec des données validées
+        const couponRef = await db.collection('coupons').add({
+            ...value,
+            validityDate: new Date(value.validityDate), // Convertir la date si nécessaire
+            //createdAt: new Date(),
+        });
+
+        res.status(201).send({ message: "Coupon created successfully", couponId: couponRef.id });
+    } catch (error) {
+        res.status(500).send({ message: "Error creating coupon", error: error.message });
+    }
 };
+
 
 export const getAllCouponByMerchant = async (req: Request, res: Response): Promise<void> => {
     const merchantId = req.params.merchantId;

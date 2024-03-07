@@ -8,14 +8,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMerchantById = exports.getMerchantByName = exports.getMerchantCategory = exports.updateMerchant = exports.getAllFoodMerchants = exports.deleteMerchant = exports.createMerchant = void 0;
 const firebase_1 = require("../../utils/firebase");
+const merchant_1 = require("../models/merchant");
 const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
-const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const date_fns_1 = require("date-fns");
+/*export const createMerchant = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
+
     try {
-        const merchantData = {
+        const merchantData: Partial<Merchant> = {
             name,
             description,
             category,
@@ -32,15 +46,41 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
             instagram,
             createdAt: new Date()
         };
-        const merchantRef = yield firebase_1.db.collection('merchants').add(merchantData);
+
+        const merchantRef = await db.collection('merchants').add(merchantData);
+
         if (address) {
-            const addressData = Object.assign(Object.assign({}, address), { merchantId: merchantRef.id, createdAt: new Date() });
-            yield firebase_1.db.collection('addresses').add(addressData);
+            const addressData = {
+                ...address,
+                merchantId: merchantRef.id,
+                createdAt: new Date()
+            };
+            await db.collection('addresses').add(addressData);
         }
+
         res.status(201).send({ message: "Merchant and address created successfully", merchantId: merchantRef.id });
+    } catch (error) {
+        res.status(500).send({ message: "Error creating merchant and address", error: error.message });
+    }
+};*/
+const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { error, value } = merchant_1.merchantSchema.validate(req.body);
+    if (error) {
+        return res.status(400).send({ message: "Validation error", error: error.details });
+    }
+    try {
+        // Destructure `value` pour séparer `address` des autres attributs
+        const { address } = value, merchantDetails = __rest(value, ["address"]);
+        // Créez le document du marchand sans l'adresse
+        const merchantRef = yield firebase_1.db.collection('merchants').add(Object.assign(Object.assign({}, merchantDetails), { createdAt: new Date() }));
+        // Si `address` est présent, ajoutez-le à la collection `addresses` avec une référence au marchand
+        if (address) {
+            yield firebase_1.db.collection('addresses').add(Object.assign(Object.assign({}, address), { merchantId: merchantRef.id, createdAt: new Date() }));
+        }
+        res.status(201).send({ message: "Merchant created successfully", merchantId: merchantRef.id });
     }
     catch (error) {
-        res.status(500).send({ message: "Error creating merchant and address", error: error.message });
+        res.status(500).send({ message: "Error creating merchant", error: error.message });
     }
 });
 exports.createMerchant = createMerchant;
@@ -190,6 +230,9 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!merchantDoc.exists) {
             res.status(404).send({ message: 'Merchant not found.' });
             return;
+        }
+        if (merchantData.createdAt) {
+            merchantData.createdAt = (0, date_fns_1.format)(merchantData.createdAt.toDate(), 'yyyy-MM-dd HH:mm:ss');
         }
         if (!addressSnapshot.empty) {
             // Prendre la première adresse trouvée pour ce marchand
