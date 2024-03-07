@@ -147,12 +147,13 @@ export const getMerchantCategory = async (req: Request, res: Response): Promise<
         let query: Query<DocumentData> = db.collection('merchants');
 
 
-        if (category) {
+        /*if (category) {
             query = query.where('category', '==', category);
-        }
+        }*/
 
         if (subCategory) {
-            query = query.where('subCategory', '==', subCategory);
+            //query = query.where('subCategory', '==', subCategory);
+            query = query.where('subCategory', 'array-contains', subCategory);
         }
 
         if (tags) {

@@ -4,5 +4,5 @@ export interface Subscription {
     title: string;
     price: number;
     description: string;
-    duration: number; // or string
+    duration: string; // or string
 }
