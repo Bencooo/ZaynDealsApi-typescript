@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
 import { UsedCoupon } from '../models/usedCoupon';
+import { getValidSubscriptionId } from '../../middlewares/subscriptionMiddlecare';
 
 export const createUsedCoupon = async (req: Request, res: Response): Promise<void> => {
-    const { userId, couponId, usageDate} = req.body;
+    const { userId, couponId, usageDate } = req.body;
 
     try {
         // Vérifier si l'utilisateur existe
@@ -22,15 +23,26 @@ export const createUsedCoupon = async (req: Request, res: Response): Promise<voi
             return;
         }
 
-        // Créer le coupon utilisé
-        const usedCouponRef = db.collection('usedCoupons').doc(); // Crée un ID unique
-        await usedCouponRef.set({
-            userId,
-            couponId,
-            usageDate: new Date(usageDate), // Assurez-vous que la date est correctement formatée
-        });
+        const validSubscriptionId = await getValidSubscriptionId(userId);
+        
+        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
 
-        res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });
+        if (validSubscriptionId === null) {
+            res.status(400).send({ message: "No valid subscription found for this user." });
+        } else {
+            // L'utilisateur a un abonnement valide, procéder à la création du coupon
+            usedCouponRef = db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
+            await usedCouponRef.set({
+                userId,
+                couponId,
+                subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
+                usageDate: new Date() 
+            });
+        }
+
+        if (usedCouponRef) {
+            res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });
+        } 
     } catch (error) {
         res.status(500).send({ message: "Error creating used coupon", error: error.message });
     }
@@ -51,7 +63,7 @@ export const getUsedCouponsByUser = async (req: Request, res: Response): Promise
         let usedCoupons: UsedCoupon[] = [];
         snapshot.forEach(doc => {
             const usedCoupon: UsedCoupon = {
-                id: doc.id,...doc.data() as UsedCoupon // Assurez-vous que les données correspondent à l'interface UsedCoupon
+                id: doc.id, ...doc.data() as UsedCoupon // Assurez-vous que les données correspondent à l'interface UsedCoupon
             };
             usedCoupons.push(usedCoupon);
         });

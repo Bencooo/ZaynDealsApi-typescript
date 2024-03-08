@@ -3,7 +3,7 @@ import { db } from '../../utils/firebase';
 import { Merchant, merchantSchema } from '../models/merchant';
 import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
-import { checkUserSubscription } from '../../middlewares/subscriptionMiddlecare';
+import { checkUserSubscriptionValidity } from '../../middlewares/subscriptionMiddlecare';
 import { format } from 'date-fns';
 
 
@@ -280,7 +280,8 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         }
 
         //Get Valid User Subcription
-        const isSubscriptionValid = await checkUserSubscription(userId);
+        const isSubscriptionValid = await checkUserSubscriptionValidity(userId);
+        console.log('isSubscriptionValid', isSubscriptionValid)
         if (!isSubscriptionValid) {
             couponsData = couponsData.map(coupon => ({
                 ...coupon,
