@@ -137,11 +137,12 @@ const getMerchantCategory = (req, res) => __awaiter(void 0, void 0, void 0, func
     const limitSize = parseInt(limit, 10) || 25; // Défaut à 25 si non spécifié
     try {
         let query = firebase_1.db.collection('merchants');
-        if (category) {
+        /*if (category) {
             query = query.where('category', '==', category);
-        }
+        }*/
         if (subCategory) {
-            query = query.where('subCategory', '==', subCategory);
+            //query = query.where('subCategory', '==', subCategory);
+            query = query.where('subCategory', 'array-contains', subCategory);
         }
         if (tags) {
             // Assumer que tags est un seul tag pour la simplicité

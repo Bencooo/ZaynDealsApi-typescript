@@ -11,19 +11,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateCoupon = exports.getAllCouponByMerchant = exports.createCoupon = void 0;
 const firebase_1 = require("../../utils/firebase");
-const createCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const coupon_1 = require("../models/coupon");
+/*export const createCoupon = async (req: Request, res: Response): Promise<void> => {
     const { subscriptionIds, merchantId, title, description, price, rules, dealType, validityDate, reusable } = req.body;
+
     try {
         // Vérifier si le merchant existe
-        const merchantRef = firebase_1.db.collection('merchants').doc(merchantId);
-        const merchantDoc = yield merchantRef.get();
+        const merchantRef = db.collection('merchants').doc(merchantId);
+        const merchantDoc = await merchantRef.get();
+
         if (!merchantDoc.exists) {
             res.status(404).send({ message: "Merchant not found" });
             return;
         }
+
         // Créer le coupon
-        const couponRef = firebase_1.db.collection('coupons').doc(); // Génère un ID automatique
-        yield couponRef.set({
+        const couponRef = db.collection('coupons').doc(); // Génère un ID automatique
+        await couponRef.set({
             subscriptionIds,
             merchantId,
             title,
@@ -34,6 +38,27 @@ const createCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             validityDate: new Date(validityDate), // Assurez-vous que la date est correctement formatée
             reusable
         });
+
+        res.status(201).send({ message: "Coupon created successfully", couponId: couponRef.id });
+    } catch (error) {
+        res.status(500).send({ message: "Error creating coupon", error: error.message });
+    }
+};*/
+const createCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { error, value } = coupon_1.couponSchema.validate(req.body);
+    if (error) {
+        res.status(400).send({ message: "Validation error", error: error.details });
+        return;
+    }
+    try {
+        // Vérifiez si le marchand existe
+        const merchantDoc = yield firebase_1.db.collection('merchants').doc(value.merchantId).get();
+        if (!merchantDoc.exists) {
+            res.status(404).send({ message: "Merchant not found" });
+            return;
+        }
+        // Créer le coupon avec des données validées
+        const couponRef = yield firebase_1.db.collection('coupons').add(Object.assign(Object.assign({}, value), { validityDate: new Date(value.validityDate) }));
         res.status(201).send({ message: "Coupon created successfully", couponId: couponRef.id });
     }
     catch (error) {
