@@ -27,8 +27,8 @@ export const createUserSubscription = async (req: Request, res: Response): Promi
         await newUserSubscriptionRef.set({
             userId,
             subscriptionId,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate)
+            //startDate: new Date(startDate),
+            //endDate: new Date(endDate)
         });
 
         res.status(201).send({ message: "User subscription created successfully"});

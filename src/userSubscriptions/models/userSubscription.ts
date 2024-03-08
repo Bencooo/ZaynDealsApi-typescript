@@ -1,7 +1,7 @@
 export interface UserSubscription {
-    id: string; // TODO rename to Id
+    id: string; 
     userId: string;
     subscriptionId: string;
-    startDate: Date;
-    endDate: Date;
+    //startDate: Date;
+    //endDate: Date;
 }

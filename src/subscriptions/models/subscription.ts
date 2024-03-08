@@ -5,4 +5,6 @@ export interface Subscription {
     price: number;
     description: string;
     duration: string; // or string
+    startDate: Date;
+    endDate: Date;
 }
