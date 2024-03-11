@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { RequestWithUser } from '../../merchants/controllers/merchantController';
 import { db } from '../../utils/firebase';
+import { format } from 'date-fns';
 
 
 
@@ -86,11 +87,19 @@ export const getAllSubscriptions = async (req: RequestWithUser, res: Response): 
             return;
         }
 
+
         let subscriptions = snapshot.docs.map(doc => {
+            const data = doc.data();
+
+            const endDate = data.endDate ? format(data.endDate.toDate(), 'yyyy-MM-dd') : null;
+            const startDate = data.startDate ? format(data.startDate.toDate(), 'yyyy-MM-dd') : null;
+
             const state = consumedSubscriptionIds.has(doc.id) ? 'consumed' : 'available';
             const subscription = {
                 id: doc.id,
                 ...doc.data(),
+                startDate,
+                endDate,
                 state,
             };
             return subscription;
