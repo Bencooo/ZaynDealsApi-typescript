@@ -12,14 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllSubscriptions = exports.deleteSubscription = exports.createSubscription = void 0;
 const firebase_1 = require("../../utils/firebase");
 const createSubscription = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { subId, title, price, description, duration } = req.body;
+    const { subId, title, image, price, description, startDate, endDate } = req.body;
     try {
         const newSubscriptionRef = firebase_1.db.collection('subscriptions').doc(subId); // Utilise subId comme ID de document
         yield newSubscriptionRef.set({
             title,
+            image,
             price,
             description,
-            duration
+            startDate: new Date(startDate),
+            endDate: new Date(endDate)
         });
         res.status(201).send({ message: "Subscription created successfully", id: newSubscriptionRef.id });
     }

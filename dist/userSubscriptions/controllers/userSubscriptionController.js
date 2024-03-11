@@ -33,8 +33,9 @@ const createUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, f
         yield newUserSubscriptionRef.set({
             userId,
             subscriptionId,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate)
+            usageDate: new Date()
+            //startDate: new Date(startDate),
+            //endDate: new Date(endDate)
         });
         res.status(201).send({ message: "User subscription created successfully" });
     }

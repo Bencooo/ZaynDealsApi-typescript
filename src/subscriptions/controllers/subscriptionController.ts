@@ -3,15 +3,15 @@ import { db } from '../../utils/firebase';
 import { Subscription } from '../models/subscription';
 
 export const createSubscription = async (req: Request, res: Response): Promise<void> => {
-    const { subId, title, price, description, duration, startDate, endDate } = req.body;
+    const { subId, title, image, price, description, startDate, endDate } = req.body;
 
     try {
         const newSubscriptionRef = db.collection('subscriptions').doc(subId); // Utilise subId comme ID de document
         await newSubscriptionRef.set({
             title,
+            image,
             price,
             description,
-            duration,
             startDate: new Date(startDate),
             endDate: new Date(endDate)
         });

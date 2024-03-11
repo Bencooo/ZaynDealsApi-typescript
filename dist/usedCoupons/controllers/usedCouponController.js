@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUsedCouponsByUserAndMerchant = exports.getUsedCouponsByUser = exports.createUsedCoupon = void 0;
 const firebase_1 = require("../../utils/firebase");
+const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
 const createUsedCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, couponId, usageDate } = req.body;
     try {
@@ -28,14 +29,24 @@ const createUsedCoupon = (req, res) => __awaiter(void 0, void 0, void 0, functio
             res.status(404).send({ message: "Coupon not found" });
             return;
         }
-        // Créer le coupon utilisé
-        const usedCouponRef = firebase_1.db.collection('usedCoupons').doc(); // Crée un ID unique
-        yield usedCouponRef.set({
-            userId,
-            couponId,
-            usageDate: new Date(usageDate), // Assurez-vous que la date est correctement formatée
-        });
-        res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });
+        const validSubscriptionId = yield (0, subscriptionMiddlecare_1.getValidSubscriptionId)(userId);
+        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
+        if (validSubscriptionId === null) {
+            res.status(400).send({ message: "No valid subscription found for this user." });
+        }
+        else {
+            // L'utilisateur a un abonnement valide, procéder à la création du coupon
+            usedCouponRef = firebase_1.db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
+            yield usedCouponRef.set({
+                userId,
+                couponId,
+                subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
+                usageDate: new Date()
+            });
+        }
+        if (usedCouponRef) {
+            res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });
+        }
     }
     catch (error) {
         res.status(500).send({ message: "Error creating used coupon", error: error.message });

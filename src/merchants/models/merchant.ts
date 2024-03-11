@@ -12,7 +12,7 @@ export interface Merchant {
     imageUrls: string[];//
     menuUrls: string[]; // (beta)
     averageRate: string;
-    pinCode: string;
+    //pinCode: string;
     openingHours: string[];
     createdAt: Date;
     instagram:string;
@@ -25,6 +25,8 @@ export interface Address {
     area: string;
     city: string;
     postalcode: string;
+    longitude: string;
+    latitude: string;
 }
 
 const Joi = require('joi');
@@ -41,6 +43,8 @@ export const merchantSchema = Joi.object({
         area: Joi.string().required(),
         zipCode: Joi.string().required(),
         country: Joi.string().required(),
+        longitude: Joi.string().required(),
+        latitude: Joi.string().required(),
         // Plus de champs si nécessaire
     }).required(),
     phoneNumber: Joi.string().required(),
@@ -49,7 +53,7 @@ export const merchantSchema = Joi.object({
     imageUrls: Joi.array().items(Joi.string()).required(),
     menuUrls: Joi.array().items(Joi.string()), // considérez `.required()` si nécessaire
     averageRate: Joi.string().required(),
-    pinCode: Joi.string().required(),
+    //pinCode: Joi.string().required(),
     openingHours: Joi.array().items(Joi.string()).required(),
     instagram: Joi.string().required(),
     // Pas besoin de createdAt ici car c'est généré automatiquement

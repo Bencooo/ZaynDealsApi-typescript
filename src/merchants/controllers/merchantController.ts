@@ -3,7 +3,7 @@ import { db } from '../../utils/firebase';
 import { Merchant, merchantSchema } from '../models/merchant';
 import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
-import { checkUserSubscriptionValidity } from '../../middlewares/subscriptionMiddlecare';
+import { checkUserSubscriptionValidity, getValidSubscriptionId } from '../../middlewares/subscriptionMiddlecare';
 import { format } from 'date-fns';
 
 
@@ -57,7 +57,7 @@ interface RequestWithUser extends Request {
 export const createMerchant = async (req: Request, res: Response) => {
     const { error, value } = merchantSchema.validate(req.body);
 
-    
+
     if (error) {
         return res.status(400).send({ message: "Validation error", error: error.details });
     }
@@ -243,7 +243,7 @@ export const getMerchantByName = async (req: Request, res: Response): Promise<vo
     }
 };
 
-export const getMerchantById = async (req: RequestWithUser, res: Response) => {
+/*export const getMerchantById = async (req: RequestWithUser, res: Response) => {
     const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
     const userId = req.user.uid
 
@@ -293,6 +293,7 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         
         // Récupérer les coupons utilisés par l'utilisateur
         const usedCouponsSnapshot = await db.collection('usedCoupons').where('userId', '==', userId).get();
+        let usedCouponsData = {};
         let usedCouponsIds = new Set();
         if (!usedCouponsSnapshot.empty) {
             usedCouponsIds = new Set(usedCouponsSnapshot.docs.map(doc => doc.data().couponId));
@@ -301,12 +302,106 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
 
+
             if (usedCouponsIds.has(coupon.id)) {
                 return { ...coupon, state: isSubscriptionValid ? 'consumed' : 'unavailable'}; // Marquer comme utilisé
             } else {
                 // Si l'abonnement n'est pas valide, tous les coupons deviennent 'unavailable'
                 //return { ...coupon, state: 'available'};
                 return { ...coupon, state: isSubscriptionValid ? 'available' : 'unavailable' };
+            }
+        });
+
+
+
+        const result = {
+            id: merchantDoc.id,
+            ...merchantData,
+            address: addressData, // Cela inclut les détails de l'adresse récupérés séparément
+            coupons: couponsData,
+        };
+
+        res.status(200).send(result);
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error", error: error.message });
+    }
+};*/
+
+
+export const getMerchantById = async (req: RequestWithUser, res: Response) => {
+    const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
+    const userId = req.user.uid
+
+    try {
+        //Get Merchant with Address
+        const merchantDoc = await db.collection('merchants').doc(merchantId).get();
+        const addressSnapshot = await db.collection('addresses').where('merchantId', '==', merchantId).get();
+        let addressData = {};
+        const merchantData = merchantDoc.data();
+
+        if (!merchantDoc.exists) {
+            res.status(404).send({ message: 'Merchant not found.' });
+            return;
+        }
+        if (merchantData.createdAt) {
+            merchantData.createdAt = format(merchantData.createdAt.toDate(), 'yyyy-MM-dd HH:mm:ss');
+        }
+        if (!addressSnapshot.empty) {
+            // Prendre la première adresse trouvée pour ce marchand
+            addressData = addressSnapshot.docs[0].data();
+        }
+
+        //Get Coupons
+        const couponsSnapshot = await db.collection('coupons').where('merchantId', '==', merchantId).get();
+        let couponsData: Coupon[] = []; // Utilisez le type Coupon[] pour typer correctement la variable
+        if (!couponsSnapshot.empty) {
+            couponsData = couponsSnapshot.docs.map(doc => {
+                const coupon: Coupon = {
+                    id: doc.id,
+                    ...doc.data() as Coupon
+                };
+                return coupon;
+            });
+        }
+
+        //Get Valid User Subcription
+        const isSubscriptionValid = await checkUserSubscriptionValidity(userId);
+        console.log('isSubscriptionValid', isSubscriptionValid)
+        if (!isSubscriptionValid) {
+            couponsData = couponsData.map(coupon => ({
+                ...coupon,
+                state: 'unavailable'
+            }));
+        }
+
+        const validSubscriptionId = await getValidSubscriptionId(userId);
+
+        //Get used Coupons
+        // Récupérer les coupons utilisés par l'utilisateur
+        const usedCouponsSnapshot = await db.collection('usedCoupons').where('userId', '==', userId).get();
+        let usedCouponsSubscriptionIds = new Map(); // Utiliser une Map pour stocker les paires couponId et leur subscriptionId
+
+        if (!usedCouponsSnapshot.empty) {
+            usedCouponsSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                usedCouponsSubscriptionIds.set(data.couponId, data.subscriptionId);
+            });
+        }
+
+        // Ajuster le champ 'state' pour chaque coupon
+        couponsData = couponsData.map(coupon => {
+            console.log('usedCouponsSubscriptionIds', usedCouponsSubscriptionIds)
+            console.log('validSubscriptionId', validSubscriptionId)
+            console.log('usedCouponsSubscriptionIds.get(coupon.id)', usedCouponsSubscriptionIds.get(coupon.id))
+            // Vérifier si le coupon a été utilisé avec l'abonnement valide
+            if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId) {
+                // Le coupon a été utilisé avec l'abonnement valide
+                console.log('Je suis LA')
+                return { ...coupon, state: 'consumed' };
+            } else {
+                // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent
+                console.log('Je suis aussi LA')
+                return { ...coupon, state: validSubscriptionId ? 'available' : 'unavailable' };
             }
         });
 
