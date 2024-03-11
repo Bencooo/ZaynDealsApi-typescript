@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import * as SubscriptionController from '../controllers/subscriptionController';
+import { checkAuth } from '../../middlewares/authMiddleware';
 
 const router = Router();
 
 router.post('/', SubscriptionController.createSubscription);
 router.delete('/:subId', SubscriptionController.deleteSubscription);
-router.get('/', SubscriptionController.getAllSubscriptions);
+router.get('/', checkAuth, SubscriptionController.getAllSubscriptions);
 
 export default router;

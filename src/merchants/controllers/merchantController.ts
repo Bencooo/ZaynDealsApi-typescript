@@ -7,7 +7,7 @@ import { checkUserSubscriptionValidity, getValidSubscriptionId } from '../../mid
 import { format } from 'date-fns';
 
 
-interface RequestWithUser extends Request {
+export interface RequestWithUser extends Request {
     user: {
         uid: string;
         // Incluez d'autres propriétés de `user` si nécessaire

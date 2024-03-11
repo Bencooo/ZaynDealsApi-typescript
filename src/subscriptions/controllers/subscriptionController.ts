@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
+import { RequestWithUser } from '../../merchants/controllers/merchantController';
 import { db } from '../../utils/firebase';
-import { Subscription } from '../models/subscription';
+
+
+
 
 export const createSubscription = async (req: Request, res: Response): Promise<void> => {
     const { subId, title, image, price, description, startDate, endDate } = req.body;
@@ -34,7 +37,7 @@ export const deleteSubscription = async (req: Request, res: Response): Promise<v
     }
 };
 
-export const getAllSubscriptions = async (req: Request, res: Response): Promise<void> => {
+/*export const getAllSubscriptions = async (req: Request, res: Response): Promise<void> => {
     try {
         const subscriptionsRef = db.collection('subscriptions');
         const snapshot = await subscriptionsRef.get();
@@ -56,4 +59,50 @@ export const getAllSubscriptions = async (req: Request, res: Response): Promise<
     } catch (error) {
         res.status(500).send({ message: 'Error getting subscriptions', error: error.message });
     }
+};*/
+
+export const getAllSubscriptions = async (req: RequestWithUser, res: Response): Promise<void> => {
+    try {
+        const userId = req.user.uid;
+
+        // Récupérer les IDs de souscription de l'utilisateur
+        const userSubscriptionsRef = db.collection('userSubscriptions').where('userId', '==', userId);
+        const userSubscriptionsSnapshot = await userSubscriptionsRef.get();
+
+        let consumedSubscriptionIds = new Set<string>();
+        userSubscriptionsSnapshot.forEach(doc => {
+            consumedSubscriptionIds.add(doc.data().subscriptionId);
+        });
+
+        // Utiliser le début de la journée actuelle pour inclure les souscriptions qui expirent aujourd'hui
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Réinitialiser l'heure au début de la journée
+
+        const subscriptionsRef = db.collection('subscriptions').where('endDate', '>=', today);
+        const snapshot = await subscriptionsRef.get();
+
+        if (snapshot.empty) {
+            res.status(404).send({ message: 'No subscriptions found' });
+            return;
+        }
+
+        let subscriptions = snapshot.docs.map(doc => {
+            const state = consumedSubscriptionIds.has(doc.id) ? 'consumed' : 'available';
+            const subscription = {
+                id: doc.id,
+                ...doc.data(),
+                state,
+            };
+            return subscription;
+        });
+
+        res.status(200).send(subscriptions);
+    } catch (error) {
+        console.error('Error getting subscriptions:', error);
+        res.status(500).send({ message: 'Error getting subscriptions', error: error.toString() });
+    }
 };
+
+
+
+

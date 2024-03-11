@@ -6,4 +6,5 @@ export interface Subscription {
     description: string;
     startDate: Date;
     endDate: Date;
+    state?: 'consumed' | 'available';
 }
