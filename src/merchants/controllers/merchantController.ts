@@ -77,7 +77,6 @@ export const createMerchant = async (req: Request, res: Response) => {
             await db.collection('addresses').add({
                 ...address,
                 merchantId: merchantRef.id,
-                createdAt: new Date(),
             });
         }
 
@@ -388,15 +387,32 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
             });
         }
 
+        let validityDateFormatted: string | null = null;
+        if (validSubscriptionId) {
+            const validSubscriptionDoc = await db.collection('subscriptions').doc(validSubscriptionId).get();
+            if (validSubscriptionDoc.exists) {
+                const validityDate = validSubscriptionDoc.data().endDate.toDate();
+                validityDateFormatted = format(validityDate, 'yyyy-MM-dd');
+            }
+        }
+
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
             // Vérifier si le coupon a été utilisé avec l'abonnement valide
             if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId) {
                 // Le coupon a été utilisé avec l'abonnement valide
-                return { ...coupon, state: 'consumed' };
+                return { 
+                    ...coupon, 
+                    state: 'consumed',
+                    validityDate: validityDateFormatted,
+                    
+                };
             } else {
                 // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent
-                return { ...coupon, state: validSubscriptionId ? 'available' : 'unavailable' };
+                return { 
+                    ...coupon,
+                    validityDate: validityDateFormatted, 
+                    state: validSubscriptionId ? 'available' : 'unavailable' };
             }
         });
 
