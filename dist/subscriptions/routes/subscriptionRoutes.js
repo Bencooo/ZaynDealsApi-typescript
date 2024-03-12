@@ -25,9 +25,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const SubscriptionController = __importStar(require("../controllers/subscriptionController"));
+const authMiddleware_1 = require("../../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 router.post('/', SubscriptionController.createSubscription);
 router.delete('/:subId', SubscriptionController.deleteSubscription);
-router.get('/', SubscriptionController.getAllSubscriptions);
+router.get('/', authMiddleware_1.checkAuth, SubscriptionController.getAllSubscriptions);
 exports.default = router;
 //# sourceMappingURL=subscriptionRoutes.js.map

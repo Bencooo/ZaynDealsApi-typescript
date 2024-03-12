@@ -18,7 +18,8 @@ export const couponSchema = Joi.object({
     image: Joi.string().required(),
     description: Joi.string().required(),
     price: Joi.string().required(),
-    rules: Joi.string().required(),
+    rules: Joi.array().items(Joi.string()).required(),
+    conditions: Joi.array().items(Joi.string()).required(),
     dealType: Joi.string().required(), // Vous pouvez aussi valider contre des valeurs spécifiques si c'est un enum
     reusable: Joi.boolean().required(),
 });

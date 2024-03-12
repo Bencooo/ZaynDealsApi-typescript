@@ -350,18 +350,13 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
-            console.log('usedCouponsSubscriptionIds', usedCouponsSubscriptionIds);
-            console.log('validSubscriptionId', validSubscriptionId);
-            console.log('usedCouponsSubscriptionIds.get(coupon.id)', usedCouponsSubscriptionIds.get(coupon.id));
             // Vérifier si le coupon a été utilisé avec l'abonnement valide
             if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId) {
                 // Le coupon a été utilisé avec l'abonnement valide
-                console.log('Je suis LA');
                 return Object.assign(Object.assign({}, coupon), { state: 'consumed' });
             }
             else {
                 // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent
-                console.log('Je suis aussi LA');
                 return Object.assign(Object.assign({}, coupon), { state: validSubscriptionId ? 'available' : 'unavailable' });
             }
         });

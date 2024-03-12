@@ -54,7 +54,7 @@ export const createCoupon = async (req: Request, res: Response): Promise<void> =
         // Créer le coupon avec des données validées
         const couponRef = await db.collection('coupons').add({
             ...value,
-            validityDate: new Date(value.validityDate), // Convertir la date si nécessaire
+            //validityDate: new Date(value.validityDate), // Convertir la date si nécessaire
             //createdAt: new Date(),
         });
 
