@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllSubscriptions = exports.deleteSubscription = exports.createSubscription = void 0;
+exports.getDateOfActiveSubscriptions = exports.getAllSubscriptions = exports.deleteSubscription = exports.createSubscription = void 0;
 const firebase_1 = require("../../utils/firebase");
 const date_fns_1 = require("date-fns");
 const createSubscription = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -103,4 +103,28 @@ const getAllSubscriptions = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getAllSubscriptions = getAllSubscriptions;
+const getDateOfActiveSubscriptions = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const today = new Date();
+        const subscriptionsRef = firebase_1.db.collection('subscriptions');
+        const querySnapshot = yield subscriptionsRef
+            .where('startDate', '<=', today)
+            .get();
+        let validSubscriptionEndDate = null;
+        querySnapshot.forEach(doc => {
+            const subscription = doc.data();
+            const startDate = subscription.startDate.toDate();
+            const endDate = subscription.endDate.toDate();
+            if (startDate <= today && endDate >= today) {
+                validSubscriptionEndDate = endDate;
+            }
+        });
+        // Formattez la endDate trouvée
+        const formattedEndDate = (0, date_fns_1.format)(validSubscriptionEndDate, 'yyyy-MM-dd');
+        return formattedEndDate;
+    }
+    catch (error) {
+    }
+});
+exports.getDateOfActiveSubscriptions = getDateOfActiveSubscriptions;
 //# sourceMappingURL=subscriptionController.js.map

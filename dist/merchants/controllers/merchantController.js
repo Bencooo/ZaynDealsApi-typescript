@@ -25,6 +25,7 @@ const firebase_1 = require("../../utils/firebase");
 const merchant_1 = require("../models/merchant");
 const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
 const date_fns_1 = require("date-fns");
+const subscriptionController_1 = require("../../subscriptions/controllers/subscriptionController");
 /*export const createMerchant = async (req: Request, res: Response) => {
     const { name, description, category, subCategory, tags, address, phoneNumber, thumbnail, email, imageUrls, menuUrls, averageRate, pinCode, openingHours, instagram } = req.body;
 
@@ -348,14 +349,7 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
                 usedCouponsSubscriptionIds.set(data.couponId, data.subscriptionId);
             });
         }
-        let validityDateFormatted = null;
-        if (validSubscriptionId) {
-            const validSubscriptionDoc = yield firebase_1.db.collection('subscriptions').doc(validSubscriptionId).get();
-            if (validSubscriptionDoc.exists) {
-                const validityDate = validSubscriptionDoc.data().endDate.toDate();
-                validityDateFormatted = (0, date_fns_1.format)(validityDate, 'yyyy-MM-dd');
-            }
-        }
+        let validityDateFormatted = yield (0, subscriptionController_1.getDateOfActiveSubscriptions)();
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
             // Vérifier si le coupon a été utilisé avec l'abonnement valide

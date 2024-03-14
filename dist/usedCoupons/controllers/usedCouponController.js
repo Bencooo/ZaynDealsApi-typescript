@@ -13,15 +13,16 @@ exports.getUsedCouponsByUserAndMerchant = exports.getUsedCouponsByUser = exports
 const firebase_1 = require("../../utils/firebase");
 const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
 const createUsedCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, couponId } = req.body;
+    const { couponId } = req.body;
+    const userId = req.user.uid;
     try {
-        // Vérifier si l'utilisateur existe
-        const userRef = firebase_1.db.collection('users').doc(userId);
-        const userDoc = yield userRef.get();
-        if (!userDoc.exists) {
-            res.status(404).send({ message: "User not found" });
+        const validSubscriptionId = yield (0, subscriptionMiddlecare_1.getValidSubscriptionId)(userId);
+        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
+        if (validSubscriptionId === null) {
+            res.status(400).send({ message: "No valid subscription found for this user." });
             return;
         }
+        console.log('userId', userId);
         // Vérifier si le coupon existe
         const couponRef = firebase_1.db.collection('coupons').doc(couponId);
         const couponDoc = yield couponRef.get();
@@ -29,21 +30,13 @@ const createUsedCoupon = (req, res) => __awaiter(void 0, void 0, void 0, functio
             res.status(404).send({ message: "Coupon not found" });
             return;
         }
-        const validSubscriptionId = yield (0, subscriptionMiddlecare_1.getValidSubscriptionId)(userId);
-        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
-        if (validSubscriptionId === null) {
-            res.status(400).send({ message: "No valid subscription found for this user." });
-        }
-        else {
-            // L'utilisateur a un abonnement valide, procéder à la création du coupon
-            usedCouponRef = firebase_1.db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
-            yield usedCouponRef.set({
-                userId,
-                couponId,
-                subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
-                usageDate: new Date()
-            });
-        }
+        usedCouponRef = firebase_1.db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
+        yield usedCouponRef.set({
+            userId,
+            couponId,
+            subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
+            usageDate: new Date()
+        });
         if (usedCouponRef) {
             res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });
         }

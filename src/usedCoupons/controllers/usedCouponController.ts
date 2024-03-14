@@ -25,7 +25,8 @@ export const createUsedCoupon = async (req: RequestWithUser, res: Response): Pro
         if (!couponDoc.exists) {
             res.status(404).send({ message: "Coupon not found" });
             return;
-        }
+        } 
+
 
 
         usedCouponRef = db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici

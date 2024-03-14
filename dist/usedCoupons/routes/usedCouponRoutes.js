@@ -25,8 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const UsedCouponController = __importStar(require("../controllers/usedCouponController"));
+const authMiddleware_1 = require("../../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
-router.post('/', UsedCouponController.createUsedCoupon);
+router.post('/', authMiddleware_1.checkAuth, UsedCouponController.createUsedCoupon);
 router.get('/user/:userId', UsedCouponController.getUsedCouponsByUser);
 router.get('/user-merchant', UsedCouponController.getUsedCouponsByUserAndMerchant);
 exports.default = router;

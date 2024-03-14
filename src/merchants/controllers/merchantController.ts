@@ -393,7 +393,7 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
             // Vérifier si le coupon a été utilisé avec l'abonnement valide
-            if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId) {
+            if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId && coupon.reusable === false) {
                 // Le coupon a été utilisé avec l'abonnement valide
                 return { 
                     ...coupon, 

@@ -38,7 +38,6 @@ const checkUserSubscriptionValidity = function (userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const userSubscriptionSnapshot = yield firebase_1.db.collection('userSubscriptions').where('userId', '==', userId).get();
         if (userSubscriptionSnapshot.empty) {
-            console.log('Aucun abonnement utilisateur correspondant trouvé.');
             return false;
         }
         const today = new Date();
@@ -70,7 +69,6 @@ const getValidSubscriptionId = function (userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const userSubscriptionSnapshot = yield firebase_1.db.collection('userSubscriptions').where('userId', '==', userId).get();
         if (userSubscriptionSnapshot.empty) {
-            console.log('Aucun abonnement utilisateur correspondant trouvé.');
             return null;
         }
         const today = new Date();
@@ -79,7 +77,6 @@ const getValidSubscriptionId = function (userId) {
             const subscriptionId = userSubscription.subscriptionId;
             const subscriptionDoc = yield firebase_1.db.collection('subscriptions').doc(subscriptionId).get();
             if (!subscriptionDoc.exists) {
-                console.log('Aucun document d\'abonnement correspondant trouvé.');
                 continue;
             }
             const subscription = subscriptionDoc.data();
