@@ -112,6 +112,35 @@ export const getAllSubscriptions = async (req: RequestWithUser, res: Response): 
     }
 };
 
+export const getDateOfActiveSubscriptions = async () => {
+    try {
+        const today = new Date();
+        
+        const subscriptionsRef = db.collection('subscriptions');
+        const querySnapshot = await subscriptionsRef
+            .where('startDate', '<=', today)
+            .get();
+
+
+        let validSubscriptionEndDate = null;
+
+        querySnapshot.forEach(doc => {
+            const subscription = doc.data();
+            const startDate = subscription.startDate.toDate();
+            const endDate = subscription.endDate.toDate();
+
+            if (startDate <= today && endDate >= today) {
+                validSubscriptionEndDate = endDate;
+            }
+        });
+
+            // Formattez la endDate trouvée
+            const formattedEndDate = format(validSubscriptionEndDate, 'yyyy-MM-dd');
+            return formattedEndDate;
+    } catch (error) {
+    }
+};
+
 
 
 

@@ -13,7 +13,7 @@ exports.getUsedCouponsByUserAndMerchant = exports.getUsedCouponsByUser = exports
 const firebase_1 = require("../../utils/firebase");
 const subscriptionMiddlecare_1 = require("../../middlewares/subscriptionMiddlecare");
 const createUsedCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, couponId, usageDate } = req.body;
+    const { userId, couponId } = req.body;
     try {
         // Vérifier si l'utilisateur existe
         const userRef = firebase_1.db.collection('users').doc(userId);

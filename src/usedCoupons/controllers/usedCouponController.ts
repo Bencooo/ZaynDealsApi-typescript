@@ -2,11 +2,14 @@ import { Request, Response } from 'express';
 import { db } from '../../utils/firebase';
 import { UsedCoupon } from '../models/usedCoupon';
 import { getValidSubscriptionId } from '../../middlewares/subscriptionMiddlecare';
+import { RequestWithUser } from 'merchants/controllers/merchantController';
 
-export const createUsedCoupon = async (req: Request, res: Response): Promise<void> => {
-    const { userId, couponId, usageDate } = req.body;
+export const createUsedCoupon = async (req: RequestWithUser, res: Response): Promise<void> => {
+    const { couponId } = req.body;
+    const userId = req.user.uid
 
     try {
+        console.log('userId', userId);
         // Vérifier si l'utilisateur existe
         const userRef = db.collection('users').doc(userId);
         const userDoc = await userRef.get();
@@ -24,7 +27,6 @@ export const createUsedCoupon = async (req: Request, res: Response): Promise<voi
         }
 
         const validSubscriptionId = await getValidSubscriptionId(userId);
-        
         let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
 
         if (validSubscriptionId === null) {
@@ -39,6 +41,7 @@ export const createUsedCoupon = async (req: Request, res: Response): Promise<voi
                 usageDate: new Date() 
             });
         }
+        
 
         if (usedCouponRef) {
             res.status(201).send({ message: "Used coupon created successfully", id: usedCouponRef.id });

@@ -75,7 +75,7 @@ const createMerchant = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const merchantRef = yield firebase_1.db.collection('merchants').add(Object.assign(Object.assign({}, merchantDetails), { createdAt: new Date() }));
         // Si `address` est présent, ajoutez-le à la collection `addresses` avec une référence au marchand
         if (address) {
-            yield firebase_1.db.collection('addresses').add(Object.assign(Object.assign({}, address), { merchantId: merchantRef.id, createdAt: new Date() }));
+            yield firebase_1.db.collection('addresses').add(Object.assign(Object.assign({}, address), { merchantId: merchantRef.id }));
         }
         res.status(201).send({ message: "Merchant created successfully", merchantId: merchantRef.id });
     }
@@ -348,16 +348,24 @@ const getMerchantById = (req, res) => __awaiter(void 0, void 0, void 0, function
                 usedCouponsSubscriptionIds.set(data.couponId, data.subscriptionId);
             });
         }
+        let validityDateFormatted = null;
+        if (validSubscriptionId) {
+            const validSubscriptionDoc = yield firebase_1.db.collection('subscriptions').doc(validSubscriptionId).get();
+            if (validSubscriptionDoc.exists) {
+                const validityDate = validSubscriptionDoc.data().endDate.toDate();
+                validityDateFormatted = (0, date_fns_1.format)(validityDate, 'yyyy-MM-dd');
+            }
+        }
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
             // Vérifier si le coupon a été utilisé avec l'abonnement valide
             if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId) {
                 // Le coupon a été utilisé avec l'abonnement valide
-                return Object.assign(Object.assign({}, coupon), { state: 'consumed' });
+                return Object.assign(Object.assign({}, coupon), { state: 'consumed', validityDate: validityDateFormatted });
             }
             else {
                 // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent
-                return Object.assign(Object.assign({}, coupon), { state: validSubscriptionId ? 'available' : 'unavailable' });
+                return Object.assign(Object.assign({}, coupon), { validityDate: validityDateFormatted, state: validSubscriptionId ? 'available' : 'unavailable' });
             }
         });
         const result = Object.assign(Object.assign({ id: merchantDoc.id }, merchantData), { address: addressData, coupons: couponsData });

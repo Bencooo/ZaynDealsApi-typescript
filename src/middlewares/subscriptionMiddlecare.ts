@@ -29,7 +29,6 @@ export const checkUserSubscriptionValidity = async function(userId: string) {
     const userSubscriptionSnapshot = await db.collection('userSubscriptions').where('userId', '==', userId).get();
 
     if (userSubscriptionSnapshot.empty) {
-        console.log('Aucun abonnement utilisateur correspondant trouvé.');
         return false;
     }
 
@@ -92,5 +91,6 @@ export const getValidSubscriptionId = async function(userId: string) {
     }
     return null; // Retourne null si aucun abonnement valide n'est trouvé
 };
+
 
 

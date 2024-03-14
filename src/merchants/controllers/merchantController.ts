@@ -5,6 +5,7 @@ import { Query, DocumentData } from '@google-cloud/firestore';
 import { Coupon } from '../../coupons/models/coupon';
 import { checkUserSubscriptionValidity, getValidSubscriptionId } from '../../middlewares/subscriptionMiddlecare';
 import { format } from 'date-fns';
+import { getDateOfActiveSubscriptions } from '../../subscriptions/controllers/subscriptionController';
 
 
 export interface RequestWithUser extends Request {
@@ -387,14 +388,7 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
             });
         }
 
-        let validityDateFormatted: string | null = null;
-        if (validSubscriptionId) {
-            const validSubscriptionDoc = await db.collection('subscriptions').doc(validSubscriptionId).get();
-            if (validSubscriptionDoc.exists) {
-                const validityDate = validSubscriptionDoc.data().endDate.toDate();
-                validityDateFormatted = format(validityDate, 'yyyy-MM-dd');
-            }
-        }
+        let validityDateFormatted = await getDateOfActiveSubscriptions();
 
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
@@ -405,7 +399,6 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
                     ...coupon, 
                     state: 'consumed',
                     validityDate: validityDateFormatted,
-                    
                 };
             } else {
                 // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent

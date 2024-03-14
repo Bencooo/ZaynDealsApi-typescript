@@ -58,7 +58,7 @@ const createCoupon = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return;
         }
         // Créer le coupon avec des données validées
-        const couponRef = yield firebase_1.db.collection('coupons').add(Object.assign(Object.assign({}, value), { validityDate: new Date(value.validityDate) }));
+        const couponRef = yield firebase_1.db.collection('coupons').add(Object.assign({}, value));
         res.status(201).send({ message: "Coupon created successfully", couponId: couponRef.id });
     }
     catch (error) {
