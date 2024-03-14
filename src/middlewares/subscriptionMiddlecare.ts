@@ -64,7 +64,6 @@ export const checkUserSubscriptionValidity = async function(userId: string) {
 export const getValidSubscriptionId = async function(userId: string) {
     const userSubscriptionSnapshot = await db.collection('userSubscriptions').where('userId', '==', userId).get();
     if (userSubscriptionSnapshot.empty) {
-        console.log('Aucun abonnement utilisateur correspondant trouvé.');
         return null;
     }
 
@@ -77,7 +76,6 @@ export const getValidSubscriptionId = async function(userId: string) {
         const subscriptionDoc = await db.collection('subscriptions').doc(subscriptionId).get();
 
         if (!subscriptionDoc.exists) {
-            console.log('Aucun document d\'abonnement correspondant trouvé.');
             continue;
         }
 

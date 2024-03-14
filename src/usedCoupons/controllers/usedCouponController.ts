@@ -9,15 +9,16 @@ export const createUsedCoupon = async (req: RequestWithUser, res: Response): Pro
     const userId = req.user.uid
 
     try {
-        console.log('userId', userId);
-        // Vérifier si l'utilisateur existe
-        const userRef = db.collection('users').doc(userId);
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) {
-            res.status(404).send({ message: "User not found" });
+
+        const validSubscriptionId = await getValidSubscriptionId(userId);
+        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
+
+        if (validSubscriptionId === null) {
+            res.status(400).send({ message: "No valid subscription found for this user." });
             return;
         }
 
+        console.log('userId', userId);
         // Vérifier si le coupon existe
         const couponRef = db.collection('coupons').doc(couponId);
         const couponDoc = await couponRef.get();
@@ -26,21 +27,14 @@ export const createUsedCoupon = async (req: RequestWithUser, res: Response): Pro
             return;
         }
 
-        const validSubscriptionId = await getValidSubscriptionId(userId);
-        let usedCouponRef; // Déclare la variable à un niveau accessible dans toute la fonction
 
-        if (validSubscriptionId === null) {
-            res.status(400).send({ message: "No valid subscription found for this user." });
-        } else {
-            // L'utilisateur a un abonnement valide, procéder à la création du coupon
-            usedCouponRef = db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
-            await usedCouponRef.set({
-                userId,
-                couponId,
-                subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
-                usageDate: new Date() 
-            });
-        }
+        usedCouponRef = db.collection('usedCoupons').doc(); // Notez que nous n'utilisons pas `const` ici
+        await usedCouponRef.set({
+            userId,
+            couponId,
+            subscriptionId: validSubscriptionId, // Inclure l'ID d'abonnement valide
+            usageDate: new Date() 
+        });
         
 
         if (usedCouponRef) {
