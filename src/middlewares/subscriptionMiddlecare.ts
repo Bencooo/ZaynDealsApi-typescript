@@ -44,7 +44,6 @@ export const checkUserSubscriptionValidity = async function(userId: string) {
         const subscriptionDoc = await db.collection('subscriptions').doc(subscriptionId).get();
 
         if (!subscriptionDoc.exists) {
-            console.log('Aucun document d\'abonnement correspondant trouvé.');
             continue; // Passe au document suivant si celui-ci n'existe pas
         }
 
@@ -53,6 +52,7 @@ export const checkUserSubscriptionValidity = async function(userId: string) {
         const endDate = subscription.endDate.toDate();
 
         // Vérifier si l'abonnement est actuellement valide
+        
         if (startDate <= today && endDate >= today) {
             isValid = true;
             break; // Quitter la boucle si un abonnement valide est trouvé

@@ -330,7 +330,7 @@ export const getMerchantByName = async (req: Request, res: Response): Promise<vo
 
 export const getMerchantById = async (req: RequestWithUser, res: Response) => {
     const merchantId = req.params.merchantId; // Supposons que l'ID du marchand soit passé en paramètre d'URL
-    const userId = req.user.uid
+    const userId = req.user.uid;
 
     try {
         //Get Merchant with Address
@@ -366,7 +366,6 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
 
         //Get Valid User Subcription
         const isSubscriptionValid = await checkUserSubscriptionValidity(userId);
-        console.log('isSubscriptionValid', isSubscriptionValid)
         if (!isSubscriptionValid) {
             couponsData = couponsData.map(coupon => ({
                 ...coupon,
@@ -381,10 +380,22 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         const usedCouponsSnapshot = await db.collection('usedCoupons').where('userId', '==', userId).get();
         let usedCouponsSubscriptionIds = new Map(); // Utiliser une Map pour stocker les paires couponId et leur subscriptionId
 
-        if (!usedCouponsSnapshot.empty) {
+        /*if (!usedCouponsSnapshot.empty) {
             usedCouponsSnapshot.docs.forEach(doc => {
                 const data = doc.data();
                 usedCouponsSubscriptionIds.set(data.couponId, data.subscriptionId);
+            });
+        }*/
+        if (!usedCouponsSnapshot.empty) {
+            usedCouponsSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                if (!usedCouponsSubscriptionIds.has(data.couponId)) {
+                    usedCouponsSubscriptionIds.set(data.couponId, [data.subscriptionId]);
+                } else {
+                    let subscriptions = usedCouponsSubscriptionIds.get(data.couponId);
+                    subscriptions.push(data.subscriptionId);
+                    usedCouponsSubscriptionIds.set(data.couponId, subscriptions);
+                }
             });
         }
 
@@ -393,15 +404,14 @@ export const getMerchantById = async (req: RequestWithUser, res: Response) => {
         // Ajuster le champ 'state' pour chaque coupon
         couponsData = couponsData.map(coupon => {
             // Vérifier si le coupon a été utilisé avec l'abonnement valide
-            if (usedCouponsSubscriptionIds.has(coupon.id) && usedCouponsSubscriptionIds.get(coupon.id) === validSubscriptionId && coupon.reusable === false) {
-                // Le coupon a été utilisé avec l'abonnement valide
+            const subscriptionIds = usedCouponsSubscriptionIds.get(coupon.id);
+            if (usedCouponsSubscriptionIds.has(coupon.id) && subscriptionIds.includes(validSubscriptionId) && coupon.reusable === false) {
                 return { 
                     ...coupon, 
                     state: 'consumed',
                     validityDate: validityDateFormatted,
                 };
             } else {
-                // Le coupon n'a pas été utilisé ou a été utilisé avec un abonnement différent
                 return { 
                     ...coupon,
                     validityDate: validityDateFormatted, 

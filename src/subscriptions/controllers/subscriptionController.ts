@@ -2,7 +2,10 @@ import { Request, Response } from 'express';
 import { RequestWithUser } from '../../merchants/controllers/merchantController';
 import { db } from '../../utils/firebase';
 import { format } from 'date-fns';
+import { number, string } from 'joi';
 
+//const stripe = require('stripe')(process.env.STRIPE_SKRT_KEY);
+const stripe = require('stripe')('sk_test_51OuGDWLE0MMe9UFcbMuAJ0tKY7kJtK2wNtVmMVVjAOJ5u0NG8DXiCHP7VUdfH2Ga41Vbr6S2vg1vvAVsIO7tqkfU00tuogjJdY');
 
 
 
@@ -115,7 +118,7 @@ export const getAllSubscriptions = async (req: RequestWithUser, res: Response): 
 export const getDateOfActiveSubscriptions = async () => {
     try {
         const today = new Date();
-        
+
         const subscriptionsRef = db.collection('subscriptions');
         const querySnapshot = await subscriptionsRef
             .where('startDate', '<=', today)
@@ -134,12 +137,99 @@ export const getDateOfActiveSubscriptions = async () => {
             }
         });
 
-            // Formattez la endDate trouvée
-            const formattedEndDate = format(validSubscriptionEndDate, 'yyyy-MM-dd');
-            return formattedEndDate;
+        // Formattez la endDate trouvée
+        const formattedEndDate = format(validSubscriptionEndDate, 'yyyy-MM-dd');
+        return formattedEndDate;
     } catch (error) {
     }
 };
+
+/*export const paymentSheet = async (req: Request, res: Response) => {
+    // Use an existing Customer ID if this is a returning customer.
+  const customer = await stripe.customers.create();
+  const ephemeralKey = await stripe.ephemeralKeys.create(
+    {customer: customer.id},
+    {apiVersion: '2023-10-16'}
+  );
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 109900,
+    currency: 'eur',
+    customer: customer.id,
+    // In the latest version of the API, specifying the `automatic_payment_methods` parameter
+    // is optional because Stripe enables its functionality by default.
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+  res.json({
+    paymentIntent: paymentIntent.client_secret,
+    ephemeralKey: ephemeralKey.secret,
+    customer: customer.id,
+    publishableKey: 'pk_test_51OuGDWLE0MMe9UFcRaeUPItIM4WI4OI6LZW52vwgeeoXNUY7iJ6CCRebLW5ss5ATfUNa3umpUL8eJ4Ii0FbqGut800ZhzRH88t'
+  });
+}*/
+
+export const paymentSheet = async (req: RequestWithUser, res: Response) => {
+    //const userId = req.body.userId; // L'ID de l'utilisateur dans votre app
+    const userId = req.user.uid;
+    const amount = req.body.amount;
+    const currency = req.body.currency;
+
+    if (!amount || !currency) {
+        return res.status(400).send('Amount and currency are required');
+    }
+
+    let customer;
+
+    try {
+        // Récupérer l'utilisateur de Firestore
+        const userRef = db.collection('users').doc(userId);
+        const doc = await userRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).send('User not found');
+        }
+
+        const userData = doc.data();
+
+        if (userData.stripeCustomerId) {
+            // Utilisateur existant avec un Customer ID Stripe
+            customer = await stripe.customers.retrieve(userData.stripeCustomerId);
+        } else {
+            // Nouvel utilisateur, ou utilisateur sans Customer ID Stripe
+            customer = await stripe.customers.create();
+            // Mise à jour de l'utilisateur avec le nouveau stripeCustomerId dans Firestore
+            await userRef.update({ stripeCustomerId: customer.id });
+        }
+
+        // Créer une clé éphémère pour le client
+        const ephemeralKey = await stripe.ephemeralKeys.create(
+            { customer: customer.id },
+            { apiVersion: '2023-10-16' }
+        );
+
+        // Créer un PaymentIntent pour le client
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount, // Le montant en centimes
+            currency: currency,
+            customer: customer.id,
+            automatic_payment_methods: { enabled: true },
+        });
+
+        // Réponse avec les informations nécessaires pour le Frontend
+        res.json({
+            paymentIntent: paymentIntent.client_secret,
+            ephemeralKey: ephemeralKey.secret,
+            customer: customer.id,
+            publishableKey: 'pk_test_YourPublishableKey'
+        });
+
+    } catch (error) {
+        console.error('Payment Sheet Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 
 
 

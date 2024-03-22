@@ -1,3 +1,4 @@
+require('dotenv').config();
 import express from 'express';
 import * as functions from 'firebase-functions';
 import http from 'http';
@@ -7,6 +8,7 @@ import couponRoutes from './coupons/routes/couponRoutes';
 import usedCouponRoutes from './usedCoupons/routes/usedCouponRoutes';
 import subscriptionRoutes from './subscriptions/routes/subscriptionRoutes';
 import userSubscriptionRoutes from './userSubscriptions/routes/userSubscriptionRoutes';
+
 
 
 const app = express();

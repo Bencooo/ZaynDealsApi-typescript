@@ -9,9 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDateOfActiveSubscriptions = exports.getAllSubscriptions = exports.deleteSubscription = exports.createSubscription = void 0;
+exports.paymentSheet = exports.getDateOfActiveSubscriptions = exports.getAllSubscriptions = exports.deleteSubscription = exports.createSubscription = void 0;
 const firebase_1 = require("../../utils/firebase");
 const date_fns_1 = require("date-fns");
+//const stripe = require('stripe')(process.env.STRIPE_SKRT_KEY);
+const stripe = require('stripe')('sk_test_51OuGDWLE0MMe9UFcbMuAJ0tKY7kJtK2wNtVmMVVjAOJ5u0NG8DXiCHP7VUdfH2Ga41Vbr6S2vg1vvAVsIO7tqkfU00tuogjJdY');
 const createSubscription = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { subId, title, image, price, description, startDate, endDate } = req.body;
     try {
@@ -127,4 +129,26 @@ const getDateOfActiveSubscriptions = () => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.getDateOfActiveSubscriptions = getDateOfActiveSubscriptions;
+const paymentSheet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Use an existing Customer ID if this is a returning customer.
+    const customer = yield stripe.customers.create();
+    const ephemeralKey = yield stripe.ephemeralKeys.create({ customer: customer.id }, { apiVersion: '2023-10-16' });
+    const paymentIntent = yield stripe.paymentIntents.create({
+        amount: 109900,
+        currency: 'eur',
+        customer: customer.id,
+        // In the latest version of the API, specifying the `automatic_payment_methods` parameter
+        // is optional because Stripe enables its functionality by default.
+        automatic_payment_methods: {
+            enabled: true,
+        },
+    });
+    res.json({
+        paymentIntent: paymentIntent.client_secret,
+        ephemeralKey: ephemeralKey.secret,
+        customer: customer.id,
+        publishableKey: 'pk_test_51OuGDWLE0MMe9UFcRaeUPItIM4WI4OI6LZW52vwgeeoXNUY7iJ6CCRebLW5ss5ATfUNa3umpUL8eJ4Ii0FbqGut800ZhzRH88t'
+    });
+});
+exports.paymentSheet = paymentSheet;
 //# sourceMappingURL=subscriptionController.js.map

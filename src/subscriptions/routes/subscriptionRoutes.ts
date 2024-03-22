@@ -5,6 +5,7 @@ import { checkAuth } from '../../middlewares/authMiddleware';
 const router = Router();
 
 router.post('/', SubscriptionController.createSubscription);
+router.post('/paymentIntent', checkAuth, SubscriptionController.paymentSheet);
 router.delete('/:subId', SubscriptionController.deleteSubscription);
 router.get('/', checkAuth, SubscriptionController.getAllSubscriptions);
 

@@ -28,6 +28,7 @@ const SubscriptionController = __importStar(require("../controllers/subscription
 const authMiddleware_1 = require("../../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 router.post('/', SubscriptionController.createSubscription);
+router.post('/paymentIntent', SubscriptionController.paymentSheet);
 router.delete('/:subId', SubscriptionController.deleteSubscription);
 router.get('/', authMiddleware_1.checkAuth, SubscriptionController.getAllSubscriptions);
 exports.default = router;
