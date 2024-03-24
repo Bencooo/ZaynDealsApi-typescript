@@ -49,7 +49,6 @@ const checkUserSubscriptionValidity = function (userId) {
             // Utiliser l'ID d'abonnement pour obtenir les détails de l'abonnement depuis la collection 'subscriptions'
             const subscriptionDoc = yield firebase_1.db.collection('subscriptions').doc(subscriptionId).get();
             if (!subscriptionDoc.exists) {
-                console.log('Aucun document d\'abonnement correspondant trouvé.');
                 continue; // Passe au document suivant si celui-ci n'existe pas
             }
             const subscription = subscriptionDoc.data();

@@ -129,26 +129,78 @@ const getDateOfActiveSubscriptions = () => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.getDateOfActiveSubscriptions = getDateOfActiveSubscriptions;
-const paymentSheet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/*export const paymentSheet = async (req: Request, res: Response) => {
     // Use an existing Customer ID if this is a returning customer.
-    const customer = yield stripe.customers.create();
-    const ephemeralKey = yield stripe.ephemeralKeys.create({ customer: customer.id }, { apiVersion: '2023-10-16' });
-    const paymentIntent = yield stripe.paymentIntents.create({
-        amount: 109900,
-        currency: 'eur',
-        customer: customer.id,
-        // In the latest version of the API, specifying the `automatic_payment_methods` parameter
-        // is optional because Stripe enables its functionality by default.
-        automatic_payment_methods: {
-            enabled: true,
-        },
-    });
-    res.json({
-        paymentIntent: paymentIntent.client_secret,
-        ephemeralKey: ephemeralKey.secret,
-        customer: customer.id,
-        publishableKey: 'pk_test_51OuGDWLE0MMe9UFcRaeUPItIM4WI4OI6LZW52vwgeeoXNUY7iJ6CCRebLW5ss5ATfUNa3umpUL8eJ4Ii0FbqGut800ZhzRH88t'
-    });
+  const customer = await stripe.customers.create();
+  const ephemeralKey = await stripe.ephemeralKeys.create(
+    {customer: customer.id},
+    {apiVersion: '2023-10-16'}
+  );
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 109900,
+    currency: 'eur',
+    customer: customer.id,
+    // In the latest version of the API, specifying the `automatic_payment_methods` parameter
+    // is optional because Stripe enables its functionality by default.
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+  res.json({
+    paymentIntent: paymentIntent.client_secret,
+    ephemeralKey: ephemeralKey.secret,
+    customer: customer.id,
+    publishableKey: 'pk_test_51OuGDWLE0MMe9UFcRaeUPItIM4WI4OI6LZW52vwgeeoXNUY7iJ6CCRebLW5ss5ATfUNa3umpUL8eJ4Ii0FbqGut800ZhzRH88t'
+  });
+}*/
+const paymentSheet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //const userId = req.body.userId; // L'ID de l'utilisateur dans votre app
+    const userId = req.user.uid;
+    const amount = req.body.amount;
+    const currency = req.body.currency;
+    if (!amount || !currency) {
+        return res.status(400).send('Amount and currency are required');
+    }
+    let customer;
+    try {
+        // Récupérer l'utilisateur de Firestore
+        const userRef = firebase_1.db.collection('users').doc(userId);
+        const doc = yield userRef.get();
+        if (!doc.exists) {
+            return res.status(404).send('User not found');
+        }
+        const userData = doc.data();
+        if (userData.stripeCustomerId) {
+            // Utilisateur existant avec un Customer ID Stripe
+            customer = yield stripe.customers.retrieve(userData.stripeCustomerId);
+        }
+        else {
+            // Nouvel utilisateur, ou utilisateur sans Customer ID Stripe
+            customer = yield stripe.customers.create();
+            // Mise à jour de l'utilisateur avec le nouveau stripeCustomerId dans Firestore
+            yield userRef.update({ stripeCustomerId: customer.id });
+        }
+        // Créer une clé éphémère pour le client
+        const ephemeralKey = yield stripe.ephemeralKeys.create({ customer: customer.id }, { apiVersion: '2023-10-16' });
+        // Créer un PaymentIntent pour le client
+        const paymentIntent = yield stripe.paymentIntents.create({
+            amount: amount, // Le montant en centimes
+            currency: currency,
+            customer: customer.id,
+            automatic_payment_methods: { enabled: true },
+        });
+        // Réponse avec les informations nécessaires pour le Frontend
+        res.json({
+            paymentIntent: paymentIntent.client_secret,
+            ephemeralKey: ephemeralKey.secret,
+            customer: customer.id,
+            publishableKey: 'pk_test_YourPublishableKey'
+        });
+    }
+    catch (error) {
+        console.error('Payment Sheet Error:', error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 exports.paymentSheet = paymentSheet;
 //# sourceMappingURL=subscriptionController.js.map
